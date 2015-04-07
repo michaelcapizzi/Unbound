@@ -10,17 +10,17 @@ import scala.io.Source
  */
 object Importing {
 
-  def importParagraphs(filePath: String): Vector[Vector[String]] = {
-    val finalBuffer = mutable.ListBuffer[Vector[String]]()
+  def importParagraphs(filePath: String): Vector[String] = {
+    val finalBuffer = mutable.ListBuffer[String]()
     val insideBuffer = mutable.ListBuffer[String]()
     for (line <- Source.fromFile(filePath).getLines.filterNot(_.startsWith("%"))) {       //skip metadata lines
       if (!line.isEmpty && line != null) insideBuffer += line             //at each blank line, it starts a new "List" to indicate a new paragraph
       else if (line.isEmpty || line == null) {
-        finalBuffer += insideBuffer.toVector                              //add last paragraph
+        finalBuffer += insideBuffer.mkString(" ")                              //add last paragraph
         insideBuffer.clear                                                //return full document
       }
     }
-    finalBuffer += insideBuffer.toVector
+    finalBuffer += insideBuffer.mkString(" ")
     finalBuffer.toVector.filterNot(_.isEmpty)
   }
 
@@ -43,7 +43,7 @@ object Importing {
 
   def makeDocument(filePath: String, processor: CoreNLPProcessor): TextDocument = {
     val text = importParagraphs(filePath)
-    val document = text.map(processor.mkDocumentFromSentences(_))
+    val document = text.map(processor.mkDocument)
     val author = getAuthor(filePath)
     val title = getTitleChapter(filePath)._1
     val chapter = getTitleChapter(filePath)._2

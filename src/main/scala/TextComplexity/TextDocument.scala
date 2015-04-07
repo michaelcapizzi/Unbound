@@ -3,35 +3,43 @@ package TextComplexity
 import edu.arizona.sista.learning.Datum
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.struct.Counter
-
+import edu.stanford.nlp.trees.Tree
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 
 
 /**
  * Created by mcapizzi on 4/5/15.
  */
-class TextDocument(text: Vector[Vector[String]], processor: CoreNLPProcessor, document: Vector[edu.arizona.sista.processors.Document], author: String, title: String, chapter: String) {
 
-  //without annotation
+//each item in vector is a full paragraph
+class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: Vector[edu.arizona.sista.processors.Document], author: String, title: String, chapter: String) {
 
+  ////////////////////////// w/o annotation //////////////////////////
+
+  //TODO test
   def fullText = {
-    text.flatten
+    text.mkString(" ")
   }
 
+  //# of paragraphs
   def paragraphSize = {
     text.length
   }
 
-  def sentenceSize = {
-    text.flatten.length
-  }
+  ////////////////////////// statistics //////////////////////////
 
-  //using Processors
+  /*def statCount(stat: DescriptiveStatistics, listOfCounts: Vector[Int], statCommand: String) = {
+    listOfCounts.map(stat.addValue(_))
+    statCommand
+  }*/
+
+  ////////////////////////// access Processors  //////////////////////////
 
   def annotate = {
-    document.map(processor.annotate(_))
+    document.map(processor.annotate)
   }
 
-  //lexical
+  ////////////////////////// lexical //////////////////////////
 
   def tuplePOS = {
     (
@@ -41,22 +49,21 @@ class TextDocument(text: Vector[Vector[String]], processor: CoreNLPProcessor, do
     ).zipped
   }
 
+  //# of total words
   def wordCount = {
     this.tuplePOS.toVector.
       map(_._1).                                  //get the tokens
       count(_.matches("[A-Za-z]+"))               //only count words (not punctuation)
   }
 
+  //# of total lemmas
   def lemmaCount = {
     this.tuplePOS.toVector.
       map(_._2).                                  //get the lemmas
       count(_.matches("[A-Za-z]+"))               //only count words (not punctuation)
   }
 
-  def wordFamilyCount = {
-    //stemmer? to detect word families? can I do it?
-  }
-
+  //# of total distinct lemmas by part of speech
   def countDistinctPOS(pos: String) = {
     this.tuplePOS.toVector.
       filter(_._3.matches(pos)).              //take only desired POS - use regex
@@ -64,13 +71,59 @@ class TextDocument(text: Vector[Vector[String]], processor: CoreNLPProcessor, do
       distinct.length                         //count distinct
   }
 
-  val counter = new Counter[String]()
+  //# of distinct word families
+  def wordFamilyCount = {
+    //stemmer? to detect word families? can I do it?
+  }
 
-  val list = List("a","b","C")
 
-  val datum = new Datum[String, String] {
-    val label = "good"
-    def features = list
-    def featuresCounter = counter}
+  ////////////////////////// syntactic //////////////////////////
+
+  //# of sentences
+  def sentenceSize = {
+    document.map(_.sentences.length).sum
+  }
+
+  def getSentenceLengths = {
+    document.map(_.sentences.                         //for each sentence in each paragraph
+      map(_.words.filter(_.matches("[A-Za-z]+"))      //get the tokens that are words
+      .length))                                       //get their sizes
+      .flatten                                        //remove the paragraphs
+  }
+
+  def sentenceLengthStats = {
+    val stat = new DescriptiveStatistics()
+    this.getSentenceLengths.map(stat.addValue(_))
+    (
+      "sentence length mean" -> stat.getMean,
+      "sentence length median" -> stat.getPercentile(50),
+      "sentence length minimum" -> stat.getMin,
+      "sentence length maximum" -> stat.getMax
+    )
+  }
+
+  def getConstituents = {
+
+  }
+
+  def constituentsCount = {
+
+  }
+
+  def constituentLengthStats = {
+
+  }
+
+  def getParseTrees = {
+    document.map(_.sentences.map(_.syntacticTree.toString).map(Tree.valueOf))
+  }
+
+  def getTreeDepths = {
+
+  }
+
+  def getTreeSizes = {
+
+  }
 
 }
