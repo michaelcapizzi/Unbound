@@ -1,7 +1,6 @@
 package TextComplexity
 
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
-
 import scala.collection.mutable
 import scala.io.Source
 

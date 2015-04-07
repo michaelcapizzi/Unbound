@@ -9,14 +9,10 @@ scalaVersion := "2.11.6"
 javaOptions += "-Xmx6G"
 
 libraryDependencies ++= Seq(
-  "edu.arizona.sista" % "processors" % "3.3",
-  "edu.arizona.sista" % "processors" % "3.3" classifier "models",
-  //"edu.arizona.sista" % "processors_2.11" % "5.2",
-  //"edu.arizona.sista" % "processors_2.11" % "5.2" classifier "models",
-  //"edu.arizona.sista" % "processors" % "5.2",
-  //"edu.arizona.sista" % "processors" % "5.2" classifier "models",
-  //"edu.arizona.sista" %% "processors" % "5.3-SNAPSHOT",
-  //"edu.arizona.sista" %% "processors" % "5.3-SNAPSHOT" classifier "models",
+  //"edu.arizona.sista" % "processors" % "3.3",
+  //"edu.arizona.sista" % "processors" % "3.3" classifier "models",
+  "edu.arizona.sista" % "processors_2.11" % "5.2",
+  "edu.arizona.sista" % "processors_2.11" % "5.2" classifier "models",
   "org.apache.commons" % "commons-math3" % "3.3",
   //"edu.cmu.cs" % "ark-tweet-nlp" % "0.3.2",
   "org.apache.commons" % "commons-compress" % "1.9",
