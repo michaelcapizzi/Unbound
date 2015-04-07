@@ -21,4 +21,7 @@ object Testing {
 
   val trees = docTest.map(_.sentences.map(_.syntacticTree.toString).map(Tree.valueOf))
 
+
+  //https://github.com/sistanlp/processors/blob/master/src/main/scala/edu/arizona/sista/discourse/rstparser/DiscourseTree.scala
+
 }

@@ -15,16 +15,35 @@ import scala.collection.JavaConverters._
 //each item in vector is a full paragraph
 class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: Vector[edu.arizona.sista.processors.Document], author: String, title: String, chapter: String) {
 
-  ////////////////////////// w/o annotation //////////////////////////
-
-  //TODO test
   def fullText = {
     text.mkString(" ")
+  }
+
+  ////////////////////////// for normalizing //////////////////////////
+
+  //# of total words
+  def wordCount = {
+    this.tuplePOS.toVector.
+      map(_._1).                                  //get the tokens
+      count(_.matches("[A-Za-z]+"))               //only count words (not punctuation)
+  }
+
+  //# of total lemmas
+  def lemmaCount = {
+    this.tuplePOS.toVector.
+      map(_._2).                                  //get the lemmas
+      count(_.matches("[A-Za-z]+"))               //only count words (not punctuation)
+  }
+
+  //# of sentences
+  def sentenceSize = {
+    document.map(_.sentences.length).sum
   }
 
   //# of paragraphs
   def paragraphSize = {
     text.length
+
   }
 
   ////////////////////////// statistics //////////////////////////
@@ -42,6 +61,8 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   ////////////////////////// lexical //////////////////////////
 
+  //compare to NaiveBayes piped as features
+
   def tuplePOS = {
     (
       document.map(_.sentences.map(_.words)).flatten.flatten,
@@ -50,24 +71,11 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     ).zipped
   }
 
-  //# of total words
-  def wordCount = {
-    this.tuplePOS.toVector.
-      map(_._1).                                  //get the tokens
-      count(_.matches("[A-Za-z]+"))               //only count words (not punctuation)
-  }
-
-  //# of total lemmas
-  def lemmaCount = {
-    this.tuplePOS.toVector.
-      map(_._2).                                  //get the lemmas
-      count(_.matches("[A-Za-z]+"))               //only count words (not punctuation)
-  }
-
   //# of total distinct lemmas by part of speech
       //verb (VB.*)
       //adjective (JJ.*)
       //conjunctions (CC)
+  //TODO normalize over wordCount
   def countDistinctPOS(pos: String) = {
     this.tuplePOS.toVector.
       filter(_._3.matches(pos)).              //take only desired POS - use regex
@@ -75,18 +83,24 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       distinct.length                         //count distinct
   }
 
+  //TODO normalize over wordCount
   //# of distinct word families
   def wordFamilyCount = {
     //stemmer? to detect word families? can I do it?
   }
 
+  //word concreteness
+  def getWordConcreteness = {
+    //
+  }
+
+  //TODO normalize over wordCount
+  def wordConcretenessStats = {
+    //
+  }
+
 
   ////////////////////////// syntactic //////////////////////////
-
-  //# of sentences
-  def sentenceSize = {
-    document.map(_.sentences.length).sum
-  }
 
   def getSentences = {
     document.map(_.sentences.map(_.words)).flatten
@@ -162,5 +176,11 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   def treeDepthStats = {
     //
   }
+
+  ////////////////////////// paragraph //////////////////////////
+
+
+  ////////////////////////// document //////////////////////////
+
 
 }
