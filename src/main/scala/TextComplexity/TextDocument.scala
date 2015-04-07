@@ -1,8 +1,9 @@
 package TextComplexity
 
+import edu.arizona.sista.learning.Datum
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
+import edu.arizona.sista.struct.Counter
 
-import scala.util.matching.Regex
 
 
 /**
@@ -63,5 +64,13 @@ class TextDocument(text: Vector[Vector[String]], processor: CoreNLPProcessor, do
       distinct.length                         //count distinct
   }
 
+  val counter = new Counter[String]()
+
+  val list = List("a","b","C")
+
+  val datum = new Datum[String, String] {
+    val label = "good"
+    def features = list
+    def featuresCounter = counter}
 
 }
