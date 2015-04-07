@@ -5,6 +5,7 @@ import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.struct.Counter
 import edu.stanford.nlp.trees.Tree
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
+import scala.collection.JavaConverters._
 
 
 /**
@@ -64,6 +65,9 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   }
 
   //# of total distinct lemmas by part of speech
+      //verb (VB.*)
+      //adjective (JJ.*)
+      //conjunctions (CC)
   def countDistinctPOS(pos: String) = {
     this.tuplePOS.toVector.
       filter(_._3.matches(pos)).              //take only desired POS - use regex
@@ -82,6 +86,10 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   //# of sentences
   def sentenceSize = {
     document.map(_.sentences.length).sum
+  }
+
+  def getSentences = {
+    document.map(_.sentences.map(_.words)).flatten
   }
 
   def getSentenceLengths = {
@@ -103,27 +111,56 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   }
 
   def getConstituents = {
-
+    this.getParseTrees.map(_.map(_.constituents)).flatten
   }
 
-  def constituentsCount = {
+  def constituentsCountStats = {
+    val stat = new DescriptiveStatistics()
+    this.getConstituents.map(_.size).map(stat.addValue(_))
+    (
+      "mean number of constituents per sentence" -> stat.getMean,
+      "median number of constituents per sentence" -> stat.getPercentile(50),
+      "minimum number of constituents in a sentence" -> stat.getMin,
+      "maximum number of constituents in a sentence" -> stat.getMax
+    )
+  }
 
+  def getConstituentLengths = {
+    this.getConstituents.map(
+    _.asScala.toVector).map(
+    constituent =>
+      for (c <- constituent) yield c.size).flatten
   }
 
   def constituentLengthStats = {
-
+    val stat = new DescriptiveStatistics()
+    this.getConstituentLengths.map(stat.addValue(_))
+    (
+      "constituent length mean" -> stat.getMean,
+      "constituent length median" -> stat.getPercentile(50),
+      "constituent length minimum" -> stat.getMin,
+      "constituent length maximum" -> stat.getMax
+      )
   }
 
   def getParseTrees = {
     document.map(_.sentences.map(_.syntacticTree.toString).map(Tree.valueOf))
   }
 
-  def getTreeDepths = {
-
+  def getTreeSizes = {
+    //
   }
 
-  def getTreeSizes = {
+  def treeSizeStats = {
+    //
+  }
 
+  def getTreeDepths = {
+    //
+  }
+
+  def treeDepthStats = {
+    //
   }
 
 }
