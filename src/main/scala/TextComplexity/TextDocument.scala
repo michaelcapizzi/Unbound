@@ -53,7 +53,7 @@ class TextDocument(text: Vector[Vector[String]], processor: CoreNLPProcessor, do
   }
 
   def wordFamilyCount = {
-    //stemmer?
+    //stemmer? to detect word families? can I do it?
   }
 
   def countDistinctPOS(pos: String) = {
