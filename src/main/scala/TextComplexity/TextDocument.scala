@@ -89,7 +89,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     this.lexicalTuple.toVector.
     filter(_._2._2.matches("CC")).
     map(_._2._1).length.                        //count all uses
-    toFloat / this.wordCount.toFloat            //normalize over wordCount
+    toFloat / this.sentenceSize.toFloat            //normalize over wordCount
   }
 
   //TODO normalize over wordCount
