@@ -23,15 +23,15 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   //# of total words
   def wordCount = {
-    this.tuplePOS.toVector.
+    this.lexicalTuple.toVector.
       map(_._1).                                  //get the tokens
       count(_.matches("[A-Za-z]+"))               //only count words (not punctuation)
   }
 
   //# of total lemmas
   def lemmaCount = {
-    this.tuplePOS.toVector.
-      map(_._2).                                  //get the lemmas
+    this.lexicalTuple.toVector.
+      map(_._2._1).                               //get the lemmas
       count(_.matches("[A-Za-z]+"))               //only count words (not punctuation)
   }
 
@@ -43,7 +43,6 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   //# of paragraphs
   def paragraphSize = {
     text.length
-
   }
 
   ////////////////////////// statistics //////////////////////////
@@ -63,24 +62,34 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   //compare to NaiveBayes piped as features
 
-  def tuplePOS = {
+  def lexicalTuple = {
+    document.map(_.sentences.map(_.words.toVector)).flatten.flatten zip
     (
-      document.map(_.sentences.map(_.words)).flatten.flatten,
       document.map(_.sentences.map(_.lemmas.get.toVector)).flatten.flatten,
-      document.map(_.sentences.map(_.tags.get.toVector)).flatten.flatten
-    ).zipped
+      document.map(_.sentences.map(_.tags.get.toVector)).flatten.flatten,
+      document.map(_.sentences.map(_.entities.get.toVector)).flatten.flatten
+    ).zipped.toVector
   }
 
   //# of total distinct lemmas by part of speech
       //verb (VB.*)
       //adjective (JJ.*)
       //conjunctions (CC)
-  //TODO normalize over wordCount
   def countDistinctPOS(pos: String) = {
-    this.tuplePOS.toVector.
-      filter(_._3.matches(pos)).              //take only desired POS - use regex
-      map(_._2).                              //extract just the lemmas from tuple
-      distinct.length                         //count distinct
+    this.lexicalTuple.toVector.
+      filter(_._2._2.matches(pos)).             //take only desired POS - use regex
+      map(_._2._1).                             //extract just the lemmas from tuple
+      distinct.length.                          //count distinct
+      toFloat / this.wordCount.toFloat          //normalize over wordCount
+  }
+
+  //total # of conjunctions used
+  //TODO normalize over # of sentences
+  def conjunctionsFrequency = {
+    this.lexicalTuple.toVector.
+    filter(_._2._2.matches("CC")).
+    map(_._2._1).length.                        //count all uses
+    toFloat / this.wordCount.toFloat            //normalize over wordCount
   }
 
   //TODO normalize over wordCount
@@ -96,9 +105,12 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   //TODO normalize over wordCount
   def wordConcretenessStats = {
-    //
+    //use lemmas
   }
 
+  //# of distinct Named Entities
+    // could be an approximation of characters?
+  //TODO normalize over wordCounts
 
   ////////////////////////// syntactic //////////////////////////
 
@@ -178,6 +190,11 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   }
 
   ////////////////////////// paragraph //////////////////////////
+
+  //coreference
+
+  //discourse
+  //https://github.com/sistanlp/processors/blob/master/src/main/scala/edu/arizona/sista/discourse/rstparser/DiscourseTree.scala
 
 
   ////////////////////////// document //////////////////////////

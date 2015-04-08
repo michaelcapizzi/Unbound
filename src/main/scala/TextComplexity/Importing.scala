@@ -49,5 +49,7 @@ object Importing {
     new TextDocument(text, processor, document, author, title, chapter)
   }
 
+  //TODO build method to import .csv and generate Map
+
 
 }
