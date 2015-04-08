@@ -6,6 +6,7 @@ import edu.arizona.sista.struct.Counter
 import edu.stanford.nlp.trees.Tree
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import scala.collection.JavaConverters._
+import Concreteness._
 
 
 /**
@@ -13,7 +14,15 @@ import scala.collection.JavaConverters._
  */
 
 //each item in vector is a full paragraph
-class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: Vector[edu.arizona.sista.processors.Document], author: String, title: String, chapter: String) {
+class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: Vector[edu.arizona.sista.processors.Document], author: String, title: String, chapter: String, gradeLevel: String) {
+
+  val getAuthor = author
+
+  val getTitle = title
+
+  val getChapter = chapter
+
+  val getGradeLevel = gradeLevel
 
   def fullText = {
     text.mkString(" ")
@@ -21,11 +30,23 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   ////////////////////////// for normalizing //////////////////////////
 
+  def getWords = {
+    this.lexicalTuple.toVector.
+      map(_._1).                                  //get the tokens
+      filter(_.matches("[A-Za-z]+"))              //only keep words (not punctuation)  }
+  }
+
   //# of total words
   def wordCount = {
     this.lexicalTuple.toVector.
       map(_._1).                                  //get the tokens
       count(_.matches("[A-Za-z]+"))               //only count words (not punctuation)
+  }
+
+  def getLemmas = {
+    this.lexicalTuple.toVector.
+      map(_._2._1).                                 //get the lemmas
+      filter(_.matches("[A-Za-z]+"))               //only keep words (not punctuation)
   }
 
   //# of total lemmas
@@ -80,16 +101,15 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       filter(_._2._2.matches(pos)).             //take only desired POS - use regex
       map(_._2._1).                             //extract just the lemmas from tuple
       distinct.length.                          //count distinct
-      toFloat / this.wordCount.toFloat          //normalize over wordCount
+      toFloat / this.wordCount.toFloat          //normalized over wordCount
   }
 
   //total # of conjunctions used
-  //TODO normalize over # of sentences
   def conjunctionsFrequency = {
     this.lexicalTuple.toVector.
     filter(_._2._2.matches("CC")).
     map(_._2._1).length.                        //count all uses
-    toFloat / this.sentenceSize.toFloat            //normalize over wordCount
+    toFloat / this.sentenceSize.toFloat         //normalized over wordCount
   }
 
   //TODO normalize over wordCount
@@ -100,12 +120,36 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   //word concreteness
   def getWordConcreteness = {
-    //
+    this.getLemmas.map(lemma =>                     //uses lemmas
+      (
+        lemma,                                      //the lemma
+        concretenessMap.getOrElse(lemma, "99")      //its concreteness score (0 - 5; 5 very concrete; 99 not in database)
+      )
+    )
   }
 
   //TODO normalize over wordCount
   def wordConcretenessStats = {
-    //use lemmas
+    val stat = new DescriptiveStatistics()
+    val removed = this.getWordConcreteness.count(missing => missing._2 == "99")       //count of how many words weren't in database
+    val concretenessFloat = this.getWordConcreteness.map(item =>                      //process results of .getWordConcreteness
+      (
+        item._1,
+        item._2.toFloat                                                                 //converts concreteness score to float
+      )
+    ).filterNot(missing =>
+      missing._2 == 99)                                                                 //remove words not in database
+    concretenessFloat.map(tuple => stat.addValue(tuple._2))
+    (
+      "number of tokens present in database normalized over lemma count" -> concretenessFloat.length.toFloat / this.lemmaCount,
+      "number of tokens not present in database normalized over lemma count" -> removed.toFloat / this.lemmaCount,
+      "minimum concreteness score present in text" -> stat.getMin,
+      "25th %ile concreteness" -> stat.getPercentile(25),
+      "mean concreteness" -> stat.getMean,
+      "median concreteness" -> stat.getPercentile(50),
+      "75th %ile concreteness" -> stat.getPercentile(75),
+      "maximum concreteness score present in text" -> stat.getMax
+    )
   }
 
   //# of distinct Named Entities

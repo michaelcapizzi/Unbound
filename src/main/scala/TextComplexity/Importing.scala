@@ -40,16 +40,21 @@ object Importing {
     }
   }
 
+  def getGradeLevel(filePath: String): String = {
+    val gradeLevelRegex = """.*\/([0-9]+)[A-Z]+_.*""".r
+    gradeLevelRegex.replaceFirstIn(filePath, """$1""")
+  }
+
   def makeDocument(filePath: String, processor: CoreNLPProcessor): TextDocument = {
     val text = importParagraphs(filePath)
     val document = text.map(processor.mkDocument)
     val author = getAuthor(filePath)
     val title = getTitleChapter(filePath)._1
     val chapter = getTitleChapter(filePath)._2
-    new TextDocument(text, processor, document, author, title, chapter)
+    val gradeLevel = getAuthor(filePath)
+    new TextDocument(text, processor, document, author, title, chapter, gradeLevel)
   }
 
-  //TODO build method to import .csv and generate Map
 
 
 }
