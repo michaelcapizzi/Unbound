@@ -10,6 +10,7 @@ import edu.stanford.nlp.trees.Tree
 object Testing {
 
   val processor = new CoreNLPProcessor()
+  val processorDiscourse = new CoreNLPProcessor(withDiscourse = true)
 
   val text = importParagraphs("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/0001AL_OwlAndMoon.txt")
 

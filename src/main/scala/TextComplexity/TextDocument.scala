@@ -84,11 +84,11 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   //compare to NaiveBayes piped as features
 
   def lexicalTuple = {
-    document.map(_.sentences.map(_.words.toVector)).flatten.flatten zip
+    document.map(_.sentences.map(_.words.toVector)).flatten.flatten zip             //the word
     (
-      document.map(_.sentences.map(_.lemmas.get.toVector)).flatten.flatten,
-      document.map(_.sentences.map(_.tags.get.toVector)).flatten.flatten,
-      document.map(_.sentences.map(_.entities.get.toVector)).flatten.flatten
+      document.map(_.sentences.map(_.lemmas.get.toVector)).flatten.flatten,         //the lemma
+      document.map(_.sentences.map(_.tags.get.toVector)).flatten.flatten,           //the POS tag
+      document.map(_.sentences.map(_.entities.get.toVector)).flatten.flatten        //the NER label
     ).zipped.toVector
   }
 
@@ -105,11 +105,11 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   }
 
   //total # of conjunctions used
-  def conjunctionsFrequency = {
+  def conjunctionFrequency = {
     this.lexicalTuple.toVector.
     filter(_._2._2.matches("CC")).
     map(_._2._1).length.                        //count all uses
-    toFloat / this.sentenceSize.toFloat         //normalized over wordCount
+    toFloat / this.sentenceSize.toFloat         //normalized over number of sentences
   }
 
   //TODO normalize over wordCount
@@ -128,7 +128,6 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     )
   }
 
-  //TODO normalize over wordCount
   def wordConcretenessStats = {
     val stat = new DescriptiveStatistics()
     val removed = this.getWordConcreteness.count(missing => missing._2 == "99")       //count of how many words weren't in database
@@ -139,7 +138,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       )
     ).filterNot(missing =>
       missing._2 == 99)                                                                 //remove words not in database
-    concretenessFloat.map(tuple => stat.addValue(tuple._2))
+    concretenessFloat.map(tuple => stat.addValue(tuple._2))                             //count
     (
       "number of tokens present in database normalized over lemma count" -> concretenessFloat.length.toFloat / this.lemmaCount,
       "number of tokens not present in database normalized over lemma count" -> removed.toFloat / this.lemmaCount,
@@ -147,13 +146,14 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       "25th %ile concreteness" -> stat.getPercentile(25),
       "mean concreteness" -> stat.getMean,
       "median concreteness" -> stat.getPercentile(50),
-      "75th %ile concreteness" -> stat.getPercentile(75),
-      "maximum concreteness score present in text" -> stat.getMax
+      "75th %ile concreteness" -> stat.getPercentile(75)/*,
+      "maximum concreteness score present in text" -> stat.getMax*/             //only 280 items = 5; too subjective of a list to use as measure?
     )
   }
 
   //# of distinct Named Entities
-    // could be an approximation of characters?
+    // could be an approximation of character? --> PERSON only
+    //In combination with Capital letter, could represent proper locations too --> LOCATION + capital letter
   //TODO normalize over wordCounts
 
   ////////////////////////// syntactic //////////////////////////
@@ -171,7 +171,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   def sentenceLengthStats = {
     val stat = new DescriptiveStatistics()
-    this.getSentenceLengths.map(stat.addValue(_))
+    this.getSentenceLengths.map(stat.addValue(_))           //count
     (
       "sentence length mean" -> stat.getMean,
       "sentence length median" -> stat.getPercentile(50),
@@ -186,7 +186,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   def constituentsCountStats = {
     val stat = new DescriptiveStatistics()
-    this.getConstituents.map(_.size).map(stat.addValue(_))
+    this.getConstituents.map(_.size).map(stat.addValue(_))                //count
     (
       "mean number of constituents per sentence" -> stat.getMean,
       "median number of constituents per sentence" -> stat.getPercentile(50),
@@ -197,14 +197,14 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   def getConstituentLengths = {
     this.getConstituents.map(
-    _.asScala.toVector).map(
+    _.asScala.toVector).map(                          //convert consituent pairs to Scala vectors
     constituent =>
-      for (c <- constituent) yield c.size).flatten
+      for (c <- constituent) yield c.size).flatten    //get size (difference) of each constituent pair
   }
 
   def constituentLengthStats = {
     val stat = new DescriptiveStatistics()
-    this.getConstituentLengths.map(stat.addValue(_))
+    this.getConstituentLengths.map(stat.addValue(_))            //count
     (
       "constituent length mean" -> stat.getMean,
       "constituent length median" -> stat.getPercentile(50),
@@ -214,7 +214,9 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   }
 
   def getParseTrees = {
-    document.map(_.sentences.map(_.syntacticTree.toString).map(Tree.valueOf))
+    document.map(_.sentences.map(
+      _.syntacticTree.toString).map(          //get the trees and convert to String
+      Tree.valueOf))                          //convert back to SISTA tree type
   }
 
   def getTreeSizes = {
