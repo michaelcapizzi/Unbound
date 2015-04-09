@@ -4,6 +4,7 @@ import edu.arizona.sista.learning.Datum
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.struct.Counter
 import edu.stanford.nlp.trees.Tree
+import org.apache.commons.math3.stat.Frequency
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import scala.collection.JavaConverters._
 import Concreteness._
@@ -79,6 +80,10 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     document.map(processor.annotate)
   }
 
+  //TODO build method to retrieve from file
+  def retrieveAnnotation = {
+    //
+  }
   ////////////////////////// lexical //////////////////////////
 
   //compare to NaiveBayes piped as features
@@ -92,6 +97,57 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     ).zipped.toVector
   }
 
+  //most frequently used words by POS
+  def mostFrequentWords = {
+    val frequencyNouns = new Frequency()
+    val frequencyAdjectives = new Frequency()
+    val frequencyVerbs = new Frequency()
+    val nouns = this.lexicalTuple.filter(tuple => tuple._2._2.matches("NNS?"))          //filter just nouns
+    val adjectives = this.lexicalTuple.filter(tuple => tuple._2._2.matches("JJ.?"))     //filter just adjectives
+    val verbs = this.lexicalTuple.filter(tuple => tuple._2._2.matches("VB.*"))          //filter just verbs
+    nouns.map(word => frequencyNouns.addValue(word._1))                                 //count nouns
+    adjectives.map(word => frequencyAdjectives.addValue(word._1))                       //count adjectives
+    verbs.map(word => frequencyVerbs.addValue(word._1))                                 //count verbs
+    val mostFreqNoun = nouns.map(tuple =>
+      (
+        tuple._1,                                                                       //rebuild tuple
+        (
+          tuple._2._1,
+          tuple._2._2,
+          tuple._2._3,
+          frequencyNouns.getCount(tuple._1).toDouble                                    //adding frequency count
+        )
+      )
+    ).distinct.sortBy(_._2._4).reverse.take(1)                                          //sort by highest frequency and take top one
+    val mostFreqAdj = adjectives.map(tuple =>
+      (
+        tuple._1,                                                                       //rebuild tuple
+        (
+          tuple._2._1,
+          tuple._2._2,
+          tuple._2._3,
+          frequencyAdjectives.getCount(tuple._1).toDouble                               //adding frequency count
+        )
+      )
+    ).distinct.sortBy(_._2._4).reverse.take(1)                                          //sort by highest frequency and take top one
+    val mostFreqVerb = verbs.map(tuple =>
+      (
+        tuple._1,                                                                       //rebuild tuple
+        (
+          tuple._2._1,
+          tuple._2._2,
+          tuple._2._3,
+          frequencyVerbs.getCount(tuple._1).toDouble                                    //adding frequency count
+        )
+      )
+    ).distinct.sortBy(_._2._4).reverse.take(1)                                          //sort by highest frequency and take top one
+    (                                                                                   //build map of most frequency word for each POS
+      "noun" -> mostFreqNoun.head._1,
+      "adjective" -> mostFreqAdj.head._1,
+      "verb" -> mostFreqVerb.head._1
+    )
+  }
+
   //# of total distinct lemmas by part of speech
       //verb (VB.*)
       //adjective (JJ.*)
@@ -101,7 +157,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       filter(_._2._2.matches(pos)).             //take only desired POS - use regex
       map(_._2._1).                             //extract just the lemmas from tuple
       distinct.length.                          //count distinct
-      toFloat / this.wordCount.toFloat          //normalized over wordCount
+      toDouble / this.wordCount.toDouble          //normalized over wordCount
   }
 
   //total # of conjunctions used
@@ -109,7 +165,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     this.lexicalTuple.toVector.
     filter(_._2._2.matches("CC")).
     map(_._2._1).length.                        //count all uses
-    toFloat / this.sentenceSize.toFloat         //normalized over number of sentences
+    toDouble / this.sentenceSize.toDouble         //normalized over number of sentences
   }
 
   //TODO normalize over wordCount
@@ -128,26 +184,30 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     )
   }
 
+  //TODO add concreteness score for values from .mostFrequentWords
   def wordConcretenessStats = {
     val stat = new DescriptiveStatistics()
     val removed = this.getWordConcreteness.count(missing => missing._2 == "99")       //count of how many words weren't in database
-    val concretenessFloat = this.getWordConcreteness.map(item =>                      //process results of .getWordConcreteness
+    val concretenessDouble = this.getWordConcreteness.map(item =>                      //process results of .getWordConcreteness
       (
         item._1,
-        item._2.toFloat                                                                 //converts concreteness score to float
+        item._2.toDouble                                                                 //converts concreteness score to Double
       )
     ).filterNot(missing =>
       missing._2 == 99)                                                                 //remove words not in database
-    concretenessFloat.map(tuple => stat.addValue(tuple._2))                             //count
+    concretenessDouble.map(tuple => stat.addValue(tuple._2))                             //count
     (
-      "number of tokens present in database normalized over lemma count" -> concretenessFloat.length.toFloat / this.lemmaCount,
-      "number of tokens not present in database normalized over lemma count" -> removed.toFloat / this.lemmaCount,
+      "number of tokens present in database normalized over lemma count" -> concretenessDouble.length.toDouble / this.lemmaCount,
+      "number of tokens not present in database normalized over lemma count" -> removed.toDouble / this.lemmaCount,
       "minimum concreteness score present in text" -> stat.getMin,
       "25th %ile concreteness" -> stat.getPercentile(25),
       "mean concreteness" -> stat.getMean,
       "median concreteness" -> stat.getPercentile(50),
-      "75th %ile concreteness" -> stat.getPercentile(75)/*,
-      "maximum concreteness score present in text" -> stat.getMax*/             //only 280 items = 5; too subjective of a list to use as measure?
+      "75th %ile concreteness" -> stat.getPercentile(75)
+      //"concreteness score of most used verb" ->
+      //"concreteness score of most used noun" ->
+      //"concreteness score of most used adjective" ->
+      //"maximum concreteness score present in text" -> stat.getMax*             //only 280 items = 5; too subjective of a list to use as measure?
     )
   }
 
@@ -155,6 +215,14 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     // could be an approximation of character? --> PERSON only
     //In combination with Capital letter, could represent proper locations too --> LOCATION + capital letter
   //TODO normalize over wordCounts
+  def getNamedEntities = {
+    //implement chunking
+  }
+
+
+  //implements Naive Bayes - output: (best grade level classification, condProbs Map)
+  //TODO implement Naive Bayes
+    //make sure that intermediate function captures conditional probabilities for each word
 
   ////////////////////////// syntactic //////////////////////////
 
@@ -173,24 +241,28 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     val stat = new DescriptiveStatistics()
     this.getSentenceLengths.map(stat.addValue(_))           //count
     (
+      "sentence length minimum" -> stat.getMin,
+      "25th %ile sentence length" -> stat.getPercentile(50),
       "sentence length mean" -> stat.getMean,
       "sentence length median" -> stat.getPercentile(50),
-      "sentence length minimum" -> stat.getMin,
+      "75th %ile sentence length" -> stat.getPercentile(75),
       "sentence length maximum" -> stat.getMax
     )
   }
 
   def getConstituents = {
-    this.getParseTrees.map(_.map(_.constituents)).flatten
+    this.getParseTrees.map(_.constituents)
   }
 
   def constituentsCountStats = {
     val stat = new DescriptiveStatistics()
     this.getConstituents.map(_.size).map(stat.addValue(_))                //count
     (
+      "minimum number of constituents in a sentence" -> stat.getMin,
+      "25th %ile number of constituents per sentence" -> stat.getPercentile(25),
       "mean number of constituents per sentence" -> stat.getMean,
       "median number of constituents per sentence" -> stat.getPercentile(50),
-      "minimum number of constituents in a sentence" -> stat.getMin,
+      "75th %ile number of constituents per sentence" -> stat.getPercentile(75),
       "maximum number of constituents in a sentence" -> stat.getMax
     )
   }
@@ -206,9 +278,11 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     val stat = new DescriptiveStatistics()
     this.getConstituentLengths.map(stat.addValue(_))            //count
     (
+      "constituent length minimum" -> stat.getMin,
+      "25th %ile constituent length" -> stat.getPercentile(25),
       "constituent length mean" -> stat.getMean,
       "constituent length median" -> stat.getPercentile(50),
-      "constituent length minimum" -> stat.getMin,
+      "75th %iler constituent length" -> stat.getPercentile(75),
       "constituent length maximum" -> stat.getMax
       )
   }
@@ -216,23 +290,43 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   def getParseTrees = {
     document.map(_.sentences.map(
       _.syntacticTree.toString).map(          //get the trees and convert to String
-      Tree.valueOf))                          //convert back to SISTA tree type
+      Tree.valueOf)).flatten                  //convert back to SISTA tree type
   }
 
   def getTreeSizes = {
-    //
+    this.getParseTrees.toVector.map(          //get the trees
+    _.size.toDouble)                          //capture their sizes
   }
 
   def treeSizeStats = {
-    //
+    val stat = new DescriptiveStatistics()
+    this.getTreeSizes.map(stat.addValue(_))       //count
+    (
+      "minimum tree size" -> stat.getMin,
+      "25th %ile tree size" -> stat.getPercentile(25),
+      "mean tree size" -> stat.getMean,
+      "median tree size" -> stat.getPercentile(50),
+      "75th %ile tree size" -> stat.getPercentile(75),
+      "maximum tree size" -> stat.getMax
+    )
   }
 
   def getTreeDepths = {
-    //
+    this.getParseTrees.toVector.map(          //get the trees
+    _.depth.toDouble)                         //capture their depths
   }
 
   def treeDepthStats = {
-    //
+    val stat = new DescriptiveStatistics()
+    this.getTreeDepths.map(stat.addValue(_))       //count
+    (
+      "minimum tree depth" -> stat.getMin,
+      "25th %ile tree depth" -> stat.getPercentile(25),
+      "mean tree depth" -> stat.getMean,
+      "median tree depth" -> stat.getPercentile(50),
+      "75th %ile tree depth" -> stat.getPercentile(75),
+      "maximum tree depth" -> stat.getMax
+      )
   }
 
   ////////////////////////// paragraph //////////////////////////

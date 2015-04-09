@@ -17,7 +17,6 @@ object Serializing {
     writeToFile.close
   }
 
-  //TODO build method to retrieve from file
 
 
 }

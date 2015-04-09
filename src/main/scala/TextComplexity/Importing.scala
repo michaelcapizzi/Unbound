@@ -51,7 +51,7 @@ object Importing {
     val author = getAuthor(filePath)
     val title = getTitleChapter(filePath)._1
     val chapter = getTitleChapter(filePath)._2
-    val gradeLevel = getAuthor(filePath)
+    val gradeLevel = getGradeLevel(filePath)
     new TextDocument(text, processor, document, author, title, chapter, gradeLevel)
   }
 
