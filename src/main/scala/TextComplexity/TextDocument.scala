@@ -349,18 +349,36 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       )
   }
 
+  //TODO figure out how to change implementation to get scores (NaN right now)
+  def getTreeScores = {
+    this.getParseTrees.map(_.score())
+  }
+
+  def treeScoreStats = {
+    //
+  }
+
   //TODO implement tregex patterns to count sentence structures used
   //Tregex?
 
   ////////////////////////// paragraph //////////////////////////
 
   //paragraph size stats
-  def paragraphLength = {
+  def getParagraphLengths = {
     document.map(_.sentences.length)
   }
 
   def paragraphLengthStats = {
-    //
+    val stat = new DescriptiveStatistics()
+    this.getParagraphLengths.map(stat.addValue(_))
+    (
+      "minimum paragraph length" -> stat.getMin,
+      "25th %ile paragraph length" -> stat.getPercentile(25),
+      "mean paragraph length" -> stat.getMean,
+      "median paragraph length" -> stat.getPercentile(50),
+      "75th %ile paragraph length" -> stat.getPercentile(75),
+      "maximum paragraph length" -> stat.getMax
+    )
   }
 
   //coreference
@@ -371,7 +389,10 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   ////////////////////////// document //////////////////////////
 
-  ////////////////////////// narrative //////////////////////////
+  //amount of dialogue
+      //if first item in *sentence* array is "``" OR last item in sentence array is "''"
+
+  /////////////////document///////// narrative //////////////////////////
 
   //number of characters
 
