@@ -2,6 +2,7 @@ package TextComplexity
 
 import java.io.File
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
+import org.apache.commons.math3.stat.Frequency
 
 import scala.io.Source
 
@@ -38,7 +39,10 @@ object Similarity {
       map(text => metadataRegex.replaceAllIn(text, ""))                                                     //remove metadata
     val processor = new FastNLPProcessor()
     val fullDocs = fullTexts.map(each => processor.mkDocument(each))                                        //make processors documents
-    fullDocs.map(each => processor.annotate(each))                                                          //annotate all documents
+    //fullDocs.map(each => processor.annotate(each))                                                          //annotate all documents -- takes too long because of dependency parser
+    fullDocs.map(each => processor.tagPartsOfSpeech(each))
+    fullDocs.map(each => processor.lemmatize(each))
+    fullDocs.map(each => processor.recognizeNamedEntities(each))
     val allWordsTuple = fullDocs.map(_.sentences.map(_.words.toVector)).flatten.flatten.toVector zip        //build tuple (word, (lemma, POS, NER))
         (
           fullDocs.map(_.sentences.map(_.lemmas.get.toVector)).flatten.flatten,                             //lemmas
@@ -55,24 +59,55 @@ object Similarity {
   }
 
   //vectors for countMatrix
-  val countMatrixColumns = extractAllWordsAllTexts(rawTextFile, keepProper = true).map(_._1)
-  val countMatrixRows = extractAllWordsAllTexts(rawTextFile, keepProper = false).
-    filter(word => word._2._2.matches("NN.") || word._2._2.matches("VB.") || word._2._2.matches("JJ.") || word._2._2.matches("RB.")).      //only keep "important" POS
-    map(_._1)
+  def makeCountMatrixRows(directory: File): Vector[String] = {
+    extractAllWordsAllTexts(rawTextFile, keepProper = false).
+      filter(word => word._2._2.matches("NN.") || word._2._2.matches("VB.") || word._2._2.matches("JJ.") || word._2._2.matches("RB.")).      //only keep "important" POS
+      map(_._1).
+      map(_.toLowerCase)                                                                                                                     //make all lowercase
+  }
 
-  //build the count matrix
-  val wordMap = countMatrixRows.map(row => (row, countMatrixColumns.map(column => column -> 0).toMap))
+  def makeCountMatrixColumns(directory: File): Vector[String] = {
+    extractAllWordsAllTexts(directory, keepProper = true).map(_._1).map(_.toLowerCase)
+  }
 
 
+  //map representing countMatrix
+  def makeWordMap(allSentencesAllTexts: Vector[Vector[String]], rowMatrix: Vector[String]/*, columnMatrix: Vector[String]*/): Vector[(String, Map[String, Double])] = {
+    for (wordToCalculate <- rowMatrix) yield {                                                      //for every word in wordMatrix rows
+    val frequency = new Frequency()                                                                       //build frequency to capture counts
+    val containsWord = allSentencesAllTexts.filter(sentence => sentence.contains(wordToCalculate)).       //capture the sentences containing that word
+        map(_.map(_.toLowerCase))                                                                             //make all words lowercase
+      for (sentence <- containsWord) {                                                                      //for each sentence
+        for (word <- sentence.filterNot(_ == wordToCalculate)) {                                                //for each word that is not the wordToCalculate
+          frequency.addValue(word)                                                                                //increment the count ==> # of times it exists in same sentence as wordToCalculate
+        }
+      }                                                                                                     //build the output tuple
+      (wordToCalculate,                                                                                       //(wordToCalculate,
+        containsWord.flatten.map(word =>
+          word -> frequency.getCount(word).toDouble                                                           //(word -> count))
+        ).toMap
+      )
+    }
+  }
 
-    //for each sentence
-      //for each word in distinct common noun, verb, adjective list
-        //count how many times each OTHER word appears  -- COLUMNS in similarity matrix
+  /*//all sentences in all texts
+  val allSentencesFromAllTexts = extractAllSentencesAllTexts(rawTextFile)
+
+  //count matrix rows
+  val countMatrixRows = makeCountMatrixRows(rawTextFile)
+
+  //count matrix columns
+  val countMatrixColumns = makeCountMatrixColumns(rawTextFile)
+
+  //count matrix
+  val wordMap = makeWordMap(allSentencesFromAllTexts, countMatrixRows)*/
+
 
   //generate word similarity matrix
     //rows ==> words
     //columns ==> words
     //cells ==> cosine similarity
+  //val wordSimilarityMap =
 
   //generating metric
     //sum of all in sentence/paragraph?
