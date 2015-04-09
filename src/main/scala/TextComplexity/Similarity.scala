@@ -103,8 +103,6 @@ object Similarity {
       //https://gist.github.com/reuben-sutton/2932974
   }*/
 
-
-  val test = DenseVector
   /*//all sentences in all texts
   val allSentencesFromAllTexts = extractAllSentencesAllTexts(rawTextFile)
 
