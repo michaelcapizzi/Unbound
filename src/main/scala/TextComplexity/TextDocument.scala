@@ -320,7 +320,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   def treeSizeStats = {
     val stat = new DescriptiveStatistics()
-    this.getTreeSizes.map(stat.addValue(_))       //count
+    this.getTreeSizes.map(stat.addValue)       //count
     (
       "minimum tree size" -> stat.getMin,
       "25th %ile tree size" -> stat.getPercentile(25),
@@ -338,7 +338,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   def treeDepthStats = {
     val stat = new DescriptiveStatistics()
-    this.getTreeDepths.map(stat.addValue(_))       //count
+    this.getTreeDepths.map(stat.addValue)       //count
     (
       "minimum tree depth" -> stat.getMin,
       "25th %ile tree depth" -> stat.getPercentile(25),
@@ -349,9 +349,19 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       )
   }
 
+  //TODO implement tregex patterns to count sentence structures used
+  //Tregex?
+
   ////////////////////////// paragraph //////////////////////////
 
   //paragraph size stats
+  def paragraphLength = {
+    document.map(_.sentences.length)
+  }
+
+  def paragraphLengthStats = {
+    //
+  }
 
   //coreference
 
