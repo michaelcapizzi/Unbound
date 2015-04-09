@@ -34,14 +34,35 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   def getWords = {
     this.lexicalTuple.toVector.
       map(_._1).                                  //get the tokens
-      filter(_.matches("[A-Za-z]+"))              //only keep words (not punctuation)  }
+      filter(_.matches("[A-Za-z]+"))              //only keep words (not punctuation)
+  }
+
+  def getProperNouns = {
+    this.lexicalTuple.toVector.
+      filter(tuple => (tuple._2._3 == "PERSON" || tuple._2._3 == "LOCATION")        //is either PERSON or LOCATION
+      && tuple._1.matches("[A-Z].*")).                                                //and capitalized
+      map(_._1).distinct                                                            //take just the word and get a distinct list
+  }
+
+  def getWordsMinusProperNouns = {
+    this.lexicalTuple.toVector.
+      filter(_._1.matches("[A-Za-z]+")).                                                    //only keep words (not punctuation)
+      filterNot(tuple => (tuple._2._3 == "PERSON" || tuple._2._3 == "LOCATION")         //remove words that are either PERSON or LOCATION
+      && tuple._1.matches("[A-Z].*")).                                                    //and capitalized
+      map(_._1)                                                                         //take just the word
   }
 
   //# of total words
   def wordCount = {
-    this.lexicalTuple.toVector.
-      map(_._1).                                  //get the tokens
-      count(_.matches("[A-Za-z]+"))               //only count words (not punctuation)
+    this.getWords.length.toDouble
+  }
+
+  def properNounCount = {
+    this.getProperNouns.length.toDouble
+  }
+
+  def wordCountMinusProperNouns = {
+    this.getWordsMinusProperNouns.length.toDouble
   }
 
   def getLemmas = {
@@ -144,7 +165,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     (                                                                                   //build map of most frequency word for each POS
       "noun" -> mostFreqNoun.head._1,
       "adjective" -> mostFreqAdj.head._1,
-      "verb" -> mostFreqVerb.head._1
+      "verb" -> mostFreqVerb.head._2._1                                                 //take lemma of verb
     )
   }
 
@@ -154,21 +175,21 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       //conjunctions (CC)
   def countDistinctPOS(pos: String) = {
     this.lexicalTuple.toVector.
-      filter(_._2._2.matches(pos)).             //take only desired POS - use regex
-      map(_._2._1).                             //extract just the lemmas from tuple
-      distinct.length.                          //count distinct
-      toDouble / this.wordCount.toDouble          //normalized over wordCount
+      filter(_._2._2.matches(pos)).                 //take only desired POS - use regex
+      map(_._2._1).                                 //extract just the lemmas from tuple
+      distinct.length.                              //count distinct
+      toDouble / this.wordCountMinusProperNouns     //normalized over wordCountMinusProperNouns
   }
 
   //total # of conjunctions used
   def conjunctionFrequency = {
     this.lexicalTuple.toVector.
     filter(_._2._2.matches("CC")).
-    map(_._2._1).length.                        //count all uses
+    map(_._2._1).length.                          //count all uses
     toDouble / this.sentenceSize.toDouble         //normalized over number of sentences
   }
 
-  //TODO normalize over wordCount
+  //TODO normalize over wordCountMinusProperNouns
   //# of distinct word families
   def wordFamilyCount = {
     //stemmer? to detect word families? can I do it?
@@ -184,30 +205,29 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     )
   }
 
-  //TODO add concreteness score for values from .mostFrequentWords
   def wordConcretenessStats = {
     val stat = new DescriptiveStatistics()
-    val removed = this.getWordConcreteness.count(missing => missing._2 == "99")       //count of how many words weren't in database
-    val concretenessDouble = this.getWordConcreteness.map(item =>                      //process results of .getWordConcreteness
+    val removed = this.getWordConcreteness.filter(missing => missing._2 == "99").distinct.length.toDouble     //count of how many distinct words weren't in database
+    val concretenessDouble = this.getWordConcreteness.map(item =>                                             //process results of .getWordConcreteness
       (
         item._1,
-        item._2.toDouble                                                                 //converts concreteness score to Double
+        item._2.toDouble                                                                                      //converts concreteness score to Double
       )
     ).filterNot(missing =>
-      missing._2 == 99)                                                                 //remove words not in database
-    concretenessDouble.map(tuple => stat.addValue(tuple._2))                             //count
+      missing._2 == 99)                                                                                       //remove words not in database
+    concretenessDouble.map(tuple => stat.addValue(tuple._2))                                                  //count
     (
-      "number of tokens present in database normalized over lemma count" -> concretenessDouble.length.toDouble / this.lemmaCount,
-      "number of tokens not present in database normalized over lemma count" -> removed.toDouble / this.lemmaCount,
+      "number of tokens present in database normalized over non-proper noun word count" -> concretenessDouble.length.toDouble / this.wordCountMinusProperNouns,
+      "number of tokens not present in database normalized over non-proper noun word count" -> removed / this.wordCountMinusProperNouns,
       "minimum concreteness score present in text" -> stat.getMin,
       "25th %ile concreteness" -> stat.getPercentile(25),
       "mean concreteness" -> stat.getMean,
       "median concreteness" -> stat.getPercentile(50),
-      "75th %ile concreteness" -> stat.getPercentile(75)
-      //"concreteness score of most used verb" ->
-      //"concreteness score of most used noun" ->
-      //"concreteness score of most used adjective" ->
-      //"maximum concreteness score present in text" -> stat.getMax*             //only 280 items = 5; too subjective of a list to use as measure?
+      "75th %ile concreteness" -> stat.getPercentile(75),
+      //"maximum concreteness score present in text" -> stat.getMax,             //only 280 items = 5; too subjective of a list to use as measure?
+      "concreteness score of most used noun" -> concretenessDouble.toMap.getOrElse(this.mostFrequentWords._1._2, 0.toDouble),
+      "concreteness score of most used adjective" -> concretenessDouble.toMap.getOrElse(this.mostFrequentWords._2._2, 0.toDouble),
+      "concreteness score of most used verb" -> concretenessDouble.toMap.getOrElse(this.mostFrequentWords._3._2, 0.toDouble)
     )
   }
 
@@ -331,6 +351,8 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   ////////////////////////// paragraph //////////////////////////
 
+  //paragraph size stats
+
   //coreference
 
   //discourse
@@ -339,5 +361,8 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   ////////////////////////// document //////////////////////////
 
+  ////////////////////////// narrative //////////////////////////
+
+  //number of characters
 
 }
