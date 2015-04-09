@@ -1,6 +1,7 @@
 package TextComplexity
 
 import java.io.File
+import breeze.linalg.SparseVector
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 import org.apache.commons.math3.stat.Frequency
 
@@ -84,7 +85,7 @@ object Similarity {
         }
       }                                                                                                     //build the output tuple
       (wordToCalculate,                                                                                       //(wordToCalculate,
-        containsWord.flatten.map(word =>
+        /*containsWord*/allSentencesAllTexts.map(_.map(_.toLowerCase)).flatten.map(word =>                    //commented out "containsWord" to include 0 counts for all words (not just sparse matrix)
           word -> frequency.getCount(word).toDouble                                                           //(word -> count))
         ).toMap
       )
@@ -94,14 +95,15 @@ object Similarity {
   //TODO apply breeze to cosine similarity
   //calculate cosine similarity of two words
     //Note: both words must appear in rows of wordCountMap
-  /*def calculateWordSimilarity(wordOne: String, wordTwo: String, wordCountMap: Vector[(String, Map[String, Double])]): Double = {
-    val wordOneVector = wordCountMap.filter(_._1 == wordOne).map(_._2.values).flatten
-    val wordTwoVector = wordCountMap.filter(_._1 == wordTwo).map(_._2.values).flatten
-    //consule breeze
+  def calculateWordSimilarity(wordOne: String, wordTwo: String, wordCountMap: Vector[(String, Map[String, Double])]): Double = {
+    val wordOneVector = SparseVector(wordCountMap.filter(_._1 == wordOne).map(_._2.values).flatten.toArray)
+    val wordTwoVector = SparseVector(wordCountMap.filter(_._1 == wordTwo).map(_._2.values).flatten.toArray)
+    val dotProduct = wordOneVector dot wordTwoVector
+    //consult breeze
       //https://github.com/scalanlp/breeze/wiki/Quickstart
       //https://github.com/scalanlp/breeze/wiki/Linear-Algebra-Cheat-Sheet
       //https://gist.github.com/reuben-sutton/2932974
-  }*/
+  }
 
   /*//all sentences in all texts
   val allSentencesFromAllTexts = extractAllSentencesAllTexts(rawTextFile)
