@@ -1,7 +1,8 @@
 package TextComplexity
 
 import java.io.File
-import breeze.linalg.SparseVector
+import breeze.linalg.{sum, SparseVector}
+import breeze.numerics.sqrt
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 import org.apache.commons.math3.stat.Frequency
 
@@ -92,18 +93,27 @@ object Similarity {
     }
   }
 
-  //TODO apply breeze to cosine similarity
+  //TODO figure out why error
   //calculate cosine similarity of two words
     //Note: both words must appear in rows of wordCountMap
   def calculateWordSimilarity(wordOne: String, wordTwo: String, wordCountMap: Vector[(String, Map[String, Double])]): Double = {
     val wordOneVector = SparseVector(wordCountMap.filter(_._1 == wordOne).map(_._2.values).flatten.toArray)
     val wordTwoVector = SparseVector(wordCountMap.filter(_._1 == wordTwo).map(_._2.values).flatten.toArray)
     val dotProduct = wordOneVector dot wordTwoVector
-    //consult breeze
-      //https://github.com/scalanlp/breeze/wiki/Quickstart
-      //https://github.com/scalanlp/breeze/wiki/Linear-Algebra-Cheat-Sheet
-      //https://gist.github.com/reuben-sutton/2932974
+    //val normalized = sqrt(sum(wordOneVector)) * sqrt(sum(wordTwoVector))
+    val normalized = sqrt(wordOneVector dot wordOneVector).*(sqrt(wordTwoVector dot wordTwoVector))   //square root of the dot product of itself?
+    dotProduct / normalized
   }
+
+  //how to calculate a score for the entire sentence
+    //for each word in the sentence...
+      //make a vector of its similarity score with each other word in the sentence
+    //use the dot product?  product?  sum?
+    //normalize?
+
+  //test:
+  //calculateWordSimilarity("mother", "bear", makeWordMap(extractAllSentencesAllTexts(f), makeCountMatrixRows(f)))
+
 
   /*//all sentences in all texts
   val allSentencesFromAllTexts = extractAllSentencesAllTexts(rawTextFile)
@@ -116,13 +126,6 @@ object Similarity {
 
   //count matrix
   val wordMap = makeWordMap(allSentencesFromAllTexts, countMatrixRows)*/
-
-
-  //generate word similarity matrix
-    //rows ==> words
-    //columns ==> words
-    //cells ==> cosine similarity
-  //val wordSimilarityMap =
 
   //generating metric
     //sum of all in sentence/paragraph?

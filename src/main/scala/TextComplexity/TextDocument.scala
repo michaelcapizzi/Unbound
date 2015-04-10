@@ -1,5 +1,7 @@
 package TextComplexity
 
+import java.io.{ByteArrayInputStream, InputStreamReader, InputStream}
+
 import edu.arizona.sista.learning.Datum
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.struct.Counter
@@ -103,8 +105,17 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   //TODO build method to retrieve from file
   def retrieveAnnotation = {
-    //
+    //def getBufferedReader(filename: String): BufferedReader = {
+    //val fileStream = new FileInputStream(filename);
+    //val gzipStream = new GZIPInputStream(fileStream);
+    //val decoder = new InputStreamReader(gzipStream, "UTF-8");
+    //new BufferedReader(decoder);
+    //}
   }
+
+  val string = "Hello there"
+  val testy = new ByteArrayInputStream(string.getBytes())
+
   ////////////////////////// lexical //////////////////////////
 
   //compare to NaiveBayes piped as features
