@@ -2,8 +2,9 @@ package TextComplexity
 
 import Importing._
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
-import edu.stanford.nlp.trees.Tree
+import edu.stanford.nlp.trees.{HeadFinder.CollinsHeadFinder, Tree}
 import edu.arizona.sista.discourse.rstparser.DiscourseTree
+
 
 /**
  * Created by mcapizzi on 4/7/15.
@@ -42,10 +43,9 @@ object Testing {
 
   //docTest.map(processor.annotate)
 
+  val trees = doc.getParseTrees
 
-
-
-  //discourseTestDoc(0).discourseTree
+  val hf = new CollinsHeadFinder()
 
 
 }

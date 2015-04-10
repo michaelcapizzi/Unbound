@@ -252,7 +252,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       if (tuples.isEmpty || tuples.tail.isEmpty) {
         newTuples.toVector
       }
-      else if (tuples.head != "O" && tuples.head._2.matches(tuples(1)._2)) {
+      else if (tuples.head._2 != "O" && tuples.head._2.matches(tuples(1)._2)) {
         val ner = tuples.takeWhile(item => item._2 != "O")
         newTuples += (((ner.map(_._1).head /: ner.map(_._1).tail)(_ + " " + _), tuples.head._2))
         loop(tuples.drop(ner.length - 1).tail)
@@ -445,6 +445,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       }
     }
   }
+
 
   ////////////////////////// document //////////////////////////
 
