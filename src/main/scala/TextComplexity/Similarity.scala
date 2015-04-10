@@ -1,7 +1,7 @@
 package TextComplexity
 
 import java.io.File
-import breeze.linalg.{sum, SparseVector}
+import breeze.linalg.{sum, SparseVector, functions}
 import breeze.numerics.sqrt
 import edu.arizona.sista.processors.fastnlp.FastNLPProcessor
 import org.apache.commons.math3.stat.Frequency
@@ -100,7 +100,6 @@ object Similarity {
     val wordOneVector = SparseVector(wordCountMap.filter(_._1 == wordOne).map(_._2.values).flatten.toArray)
     val wordTwoVector = SparseVector(wordCountMap.filter(_._1 == wordTwo).map(_._2.values).flatten.toArray)
     val dotProduct = wordOneVector dot wordTwoVector
-    //val normalized = sqrt(sum(wordOneVector)) * sqrt(sum(wordTwoVector))
     val normalized = sqrt(wordOneVector dot wordOneVector).*(sqrt(wordTwoVector dot wordTwoVector))   //square root of the dot product of itself?
     dotProduct / normalized
   }
@@ -111,7 +110,9 @@ object Similarity {
     //use the dot product?  product?  sum?
     //normalize?
 
-  //test:
+
+
+  /////////////////////test:
   //calculateWordSimilarity("mother", "bear", makeWordMap(extractAllSentencesAllTexts(f), makeCountMatrixRows(f)))
 
 
@@ -127,8 +128,6 @@ object Similarity {
   //count matrix
   val wordMap = makeWordMap(allSentencesFromAllTexts, countMatrixRows)*/
 
-  //generating metric
-    //sum of all in sentence/paragraph?
-    //average of all in sentence/paragraph?
+
 
 }

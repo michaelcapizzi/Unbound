@@ -1,7 +1,6 @@
 package TextComplexity
 
 import java.io.{ByteArrayInputStream, InputStreamReader, InputStream}
-
 import edu.arizona.sista.learning.Datum
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.struct.Counter
@@ -10,6 +9,7 @@ import org.apache.commons.math3.stat.Frequency
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import scala.collection.JavaConverters._
 import Concreteness._
+
 
 
 /**
@@ -112,9 +112,6 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     //new BufferedReader(decoder);
     //}
   }
-
-  val string = "Hello there"
-  val testy = new ByteArrayInputStream(string.getBytes())
 
   ////////////////////////// lexical //////////////////////////
 
@@ -397,6 +394,31 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   //discourse
   //https://github.com/sistanlp/processors/blob/master/src/main/scala/edu/arizona/sista/discourse/rstparser/DiscourseTree.scala
 
+  def getDiscourseTrees = {
+    document.map(_.discourseTree)/*.
+      map(_.get.toString.split("\n").map(_.trim).
+      take(1).head.
+      split(" ")*/
+  }
+
+  def getDiscourseRelations = {
+    val discourseRelationsRaw =
+      this.getDiscourseTrees.map(_.           //get discourse trees
+      get.toString.split("\n").map(_.       //split by line
+      trim)).map(paragraph =>               //remove whitespace
+      paragraph.filterNot(_.                //remove text, keeping details
+      startsWith("TEXT")))
+    for (paragraph <- discourseRelationsRaw) yield {
+      if (paragraph.nonEmpty) {
+        val relationsRegex = """(.+)( \(\w+\))?""".r
+        paragraph.map(each =>
+          each.trim match {
+            case relationsRegex(relation, direction) => (relation, direction)
+          }
+        )
+      }
+    }
+  }
 
   ////////////////////////// document //////////////////////////
 
