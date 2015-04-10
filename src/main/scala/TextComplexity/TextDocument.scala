@@ -7,9 +7,10 @@ import edu.arizona.sista.struct.Counter
 import edu.stanford.nlp.trees.Tree
 import org.apache.commons.math3.stat.Frequency
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
+import spire.std.tuples
 import scala.collection.JavaConverters._
 import Concreteness._
-
+import scala.collection.mutable
 
 
 /**
@@ -239,12 +240,29 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     )
   }
 
+  //TODO test
   //# of distinct Named Entities
     // could be an approximation of character? --> PERSON only
     //In combination with Capital letter, could represent proper locations too --> LOCATION + capital letter
-  //TODO normalize over wordCounts
   def getNamedEntities = {
-    //implement chunking
+    val nerTuples = this.lexicalTuple.map(item => (item._1, item._2._3))
+    val newTuples = mutable.ListBuffer[(String, String)]()
+
+    def loop(tuples: Vector[(String, String)]): Vector[(String, String)] = {
+      if (tuples.isEmpty || tuples.tail.isEmpty) {
+        newTuples.toVector
+      }
+      else if (tuples.head != "O" && tuples.head._2.matches(tuples(1)._2)) {
+        val ner = tuples.takeWhile(item => item._2 != "O")
+        newTuples += (((ner.map(_._1).head /: ner.map(_._1).tail)(_ + " " + _), tuples.head._2))
+        loop(tuples.drop(ner.length - 1).tail)
+      }
+      else {
+        loop(tuples.tail)
+      }
+    }
+
+    loop(nerTuples)
   }
 
 
@@ -366,6 +384,14 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     //
   }
 
+  def getSentenceSimilarityScores = {
+    //
+  }
+
+  def sentenceSimilarityScoreStats = {
+    //
+  }
+
   //TODO implement tregex patterns to count sentence structures used
   //Tregex?
 
@@ -410,9 +436,9 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       startsWith("TEXT")))
     for (paragraph <- discourseRelationsRaw) yield {
       if (paragraph.nonEmpty) {
-        val relationsRegex = """(.+)( \(\w+\))?""".r
+        val relationsRegex = """\s*(\w+-?\w+)( \(\w+\))?""".r
         paragraph.map(each =>
-          each.trim match {
+          each match {
             case relationsRegex(relation, direction) => (relation, direction)
           }
         )

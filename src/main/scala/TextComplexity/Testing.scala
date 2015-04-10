@@ -21,6 +21,19 @@ object Testing {
 
   val discourseTestDoc = importParagraphs("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/0203ES_CowgirlKate.txt").map(processorDiscourseTest.mkDocument)
 
+  /*
+
+  val discourseTrees = discourseTestDoc.map(_.discourseTree)
+
+  val discourseTreesRaw = discourseTrees.map(_.           //get discourse trees
+      get.toString.split("\n").map(_.       //split by line
+      trim)).map(paragraph =>               //remove whitespace
+      paragraph.filterNot(_.                //remove text, keeping details
+        startsWith("TEXT")))
+
+  val relationsRegex = """(.+)( \(\w+\))?""".r
+
+  */
 
   //testing inside class
   val discourseDoc = makeDocument("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/0203ES_CowgirlKate.txt", processorDiscourse)

@@ -93,14 +93,14 @@ object Similarity {
     }
   }
 
-  //TODO figure out why error
+
   //calculate cosine similarity of two words
-    //Note: both words must appear in rows of wordCountMap
+    //compiles despite error
   def calculateWordSimilarity(wordOne: String, wordTwo: String, wordCountMap: Vector[(String, Map[String, Double])]): Double = {
     val wordOneVector = SparseVector(wordCountMap.filter(_._1 == wordOne).map(_._2.values).flatten.toArray)
     val wordTwoVector = SparseVector(wordCountMap.filter(_._1 == wordTwo).map(_._2.values).flatten.toArray)
-    val dotProduct = wordOneVector dot wordTwoVector
-    val normalized = sqrt(wordOneVector dot wordOneVector).*(sqrt(wordTwoVector dot wordTwoVector))   //square root of the dot product of itself?
+    val dotProduct = if (wordOneVector.length != wordTwoVector.length) 0 else wordOneVector dot wordTwoVector   //if words both don't appear in wordMap, then 0
+    val normalized = sqrt(wordOneVector dot wordOneVector) * sqrt(wordTwoVector dot wordTwoVector)   //square root of the dot product of itself?
     dotProduct / normalized
   }
 
