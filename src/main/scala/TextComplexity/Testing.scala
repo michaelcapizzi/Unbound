@@ -2,7 +2,6 @@ package TextComplexity
 
 import Importing._
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
-import edu.stanford.nlp.trees.{HeadFinder.CollinsHeadFinder, Tree}
 import edu.arizona.sista.discourse.rstparser.DiscourseTree
 
 
@@ -42,10 +41,6 @@ object Testing {
   val doc = makeDocument("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/0001AL_OwlAndMoon.txt", processorTest)
 
   //docTest.map(processor.annotate)
-
-  val trees = doc.getParseTrees
-
-  val hf = new CollinsHeadFinder()
 
 
 }
