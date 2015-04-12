@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, InputStreamReader, InputStream}
 import edu.arizona.sista.learning.Datum
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.struct.Counter
-import edu.stanford.nlp.trees.Tree
+import edu.stanford.nlp.trees.{MemoryTreebank, DiskTreebank, Tree}
 import org.apache.commons.math3.stat.Frequency
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import spire.std.tuples
@@ -415,6 +415,27 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   //TODO implement tregex patterns to count sentence structures used
   //Tregex?
+
+/*  val docTreeBank = new MemoryTreebank()
+
+  this.getParseTrees.map(tree => docTreeBank.add(tree))
+
+  docTreeBank.textualSummary
+
+  //make pattern
+  val pattern = TregexPattern.compile("[pattern]")
+
+  //boolean if match
+  pattern.matcher([tree]).find
+
+  //returns matching trees
+  val matchingTrees = trees.filter(tree => pattern.matcher(tree).find == true)
+
+  //next matching node
+  patter.matcher(docTreeBank).findNextMatchingNode
+
+  */
+
 
   ////////////////////////// paragraph //////////////////////////
 
