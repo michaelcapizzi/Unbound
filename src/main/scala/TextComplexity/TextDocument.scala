@@ -436,6 +436,13 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   */
 
+  //TODO build patterns for each structure
+
+  //return sentences grouped by structure
+  def getSentenceStructures = {
+    //
+  }
+
 
   ////////////////////////// paragraph //////////////////////////
 
