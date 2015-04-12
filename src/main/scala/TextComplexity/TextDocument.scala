@@ -95,7 +95,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   /*def statCount(stat: DescriptiveStatistics, listOfCounts: Vector[Int], statCommand: String) = {
     listOfCounts.map(stat.addValue(_))
-    statCommand
+    [statCommand]
   }*/
 
   ////////////////////////// access Processors  //////////////////////////
@@ -269,13 +269,27 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   }
 
   def getCharacters = {
-    //
+    val characterList = this.getNamedEntities.filter(_._2 == "PERSON").map(_._1)
+    val buffer = mutable.Buffer[String]()                                             //to hold characters kept
+
+    def loop(chars: Vector[String]): Vector[String] = {
+      if (chars.isEmpty) buffer.toVector
+      else if (chars.tail.map(_.contains(chars.head)).contains(true)) {                 //if a later item in the list contains the head
+       // buffer += "skipped"
+        loop(chars.tail)                                                                  //skip it
+      }
+      else {
+        buffer += chars.head                                                            //otherwise add it to buffer
+        loop(chars.tail)                                                                //continue
+      }
+    }
+
+    loop(characterList.sortBy(_.length))
   }
 
 
   //implements Naive Bayes - output: (best grade level classification, condProbs Map)
   //TODO implement Naive Bayes
-    //make sure that intermediate function captures conditional probabilities for each word
 
   ////////////////////////// syntactic //////////////////////////
 
