@@ -32,7 +32,6 @@ object Similarity {
     fullDocs.map(_.sentences.map(_.words.toVector)).flatten.toVector                                    //flat list of sentences
   }
 
-  //TODO figure out why it's still capturing punctuation
   //get all words from all texts
       //keepProper = true --> keeps ALL tokens that are not punctuation
       //keepProper = false --> removes punctuation and proper nouns
@@ -99,8 +98,8 @@ object Similarity {
   def calculateWordSimilarity(wordOne: String, wordTwo: String, wordCountMap: Vector[(String, Map[String, Double])]): Double = {
     val wordOneVector = SparseVector(wordCountMap.filter(_._1 == wordOne).map(_._2.values).flatten.toArray)
     val wordTwoVector = SparseVector(wordCountMap.filter(_._1 == wordTwo).map(_._2.values).flatten.toArray)
-    val dotProduct = if (wordOneVector.length != wordTwoVector.length) 0 else wordOneVector dot wordTwoVector   //if words both don't appear in wordMap, then 0
-    val normalized = sqrt(wordOneVector dot wordOneVector) * sqrt(wordTwoVector dot wordTwoVector)   //square root of the dot product of itself?
+    val dotProduct = if (wordOneVector.length != wordTwoVector.length) 0 else wordOneVector dot wordTwoVector         //if words both don't appear in wordMap, then 0
+    val normalized = sqrt(wordOneVector dot wordOneVector) * sqrt(wordTwoVector dot wordTwoVector)                    //square root of the dot product of itself?
     dotProduct / normalized
   }
 
@@ -109,7 +108,6 @@ object Similarity {
       //make a vector of its similarity score with each other word in the sentence
     //use the dot product?  product?  sum?
     //normalize?
-
 
 
   /////////////////////test:

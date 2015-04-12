@@ -10,6 +10,7 @@ import edu.arizona.sista.discourse.rstparser.DiscourseTree
  */
 object Testing {
 
+  val processor = new CoreNLPProcessor()
   val processorTest = new CoreNLPProcessor()
   val processorDiscourse = new CoreNLPProcessor(withDiscourse = true)
   val processorDiscourseTest = new CoreNLPProcessor(withDiscourse = true)
@@ -38,7 +39,7 @@ object Testing {
   //testing inside class
   val discourseDoc = makeDocument("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/0203ES_CowgirlKate.txt", processorDiscourse)
 
-  val doc = makeDocument("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/0001AL_OwlAndMoon.txt", processorTest)
+  val doc = makeDocument("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/0001AL_OwlAndMoon.txt", processor)
 
   //docTest.map(processor.annotate)
 

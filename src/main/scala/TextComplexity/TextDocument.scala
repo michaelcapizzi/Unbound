@@ -240,6 +240,10 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     )
   }
 
+  def getWordSimilaritySentenceScores = {
+   //
+  }
+
   //# of distinct Named Entities
     // could be an approximation of character? --> PERSON only
     //In combination with Capital letter, could represent proper locations too --> LOCATION + capital letter
@@ -265,7 +269,7 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   }
 
   def getCharacters = {
-    this.getNamedEntities
+    //
   }
 
 
