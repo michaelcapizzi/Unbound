@@ -4,6 +4,7 @@ import java.io.{ByteArrayInputStream, InputStreamReader, InputStream}
 import edu.arizona.sista.learning.Datum
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.struct.Counter
+import edu.stanford.nlp.trees.tregex.TregexPattern
 import edu.stanford.nlp.trees.{CollinsHeadFinder, MemoryTreebank, DiskTreebank, Tree}
 import org.apache.commons.math3.stat.Frequency
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
@@ -317,43 +318,6 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     )
   }
 
-  def getConstituents = {
-    this.getParseTrees.map(_.constituents)
-  }
-
-  def constituentsCountStats = {
-    val stat = new DescriptiveStatistics()
-    this.getConstituents.map(_.size).map(stat.addValue(_))                //count
-    (
-      "minimum number of constituents in a sentence" -> stat.getMin,
-      "25th %ile number of constituents per sentence" -> stat.getPercentile(25),
-      "mean number of constituents per sentence" -> stat.getMean,
-      "median number of constituents per sentence" -> stat.getPercentile(50),
-      "75th %ile number of constituents per sentence" -> stat.getPercentile(75),
-      "maximum number of constituents in a sentence" -> stat.getMax
-    )
-  }
-
-  def getConstituentLengths = {
-    this.getConstituents.map(
-    _.asScala.toVector).map(                          //convert consituent pairs to Scala vectors
-    constituent =>
-      for (c <- constituent) yield c.size).flatten    //get size (difference) of each constituent pair
-  }
-
-  def constituentLengthStats = {
-    val stat = new DescriptiveStatistics()
-    this.getConstituentLengths.map(stat.addValue(_))            //count
-    (
-      "constituent length minimum" -> stat.getMin,
-      "25th %ile constituent length" -> stat.getPercentile(25),
-      "constituent length mean" -> stat.getMean,
-      "constituent length median" -> stat.getPercentile(50),
-      "75th %iler constituent length" -> stat.getPercentile(75),
-      "constituent length maximum" -> stat.getMax
-      )
-  }
-
   def getParseTrees = {
     document.map(_.sentences.map(
       _.syntacticTree.toString).map(          //get the trees and convert to String
@@ -405,6 +369,43 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     //
   }
 
+  def getConstituents = {
+    this.getParseTrees.map(_.constituents)
+  }
+
+  def constituentsCountStats = {
+    val stat = new DescriptiveStatistics()
+    this.getConstituents.map(_.size).map(stat.addValue(_))                //count
+    (
+      "minimum number of constituents in a sentence" -> stat.getMin,
+      "25th %ile number of constituents per sentence" -> stat.getPercentile(25),
+      "mean number of constituents per sentence" -> stat.getMean,
+      "median number of constituents per sentence" -> stat.getPercentile(50),
+      "75th %ile number of constituents per sentence" -> stat.getPercentile(75),
+      "maximum number of constituents in a sentence" -> stat.getMax
+      )
+  }
+
+  def getConstituentLengths = {
+    this.getConstituents.map(
+      _.asScala.toVector).map(                          //convert consituent pairs to Scala vectors
+        constituent =>
+          for (c <- constituent) yield c.size).flatten    //get size (difference) of each constituent pair
+  }
+
+  def constituentLengthStats = {
+    val stat = new DescriptiveStatistics()
+    this.getConstituentLengths.map(stat.addValue(_))            //count
+    (
+      "constituent length minimum" -> stat.getMin,
+      "25th %ile constituent length" -> stat.getPercentile(25),
+      "constituent length mean" -> stat.getMean,
+      "constituent length median" -> stat.getPercentile(50),
+      "75th %iler constituent length" -> stat.getPercentile(75),
+      "constituent length maximum" -> stat.getMax
+      )
+  }
+
   def getClauseLengths = {
     //
   }
@@ -445,26 +446,6 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   //TODO implement tregex patterns to count sentence structures used
   //Tregex?
 
-/*  val docTreeBank = new MemoryTreebank()
-
-  this.getParseTrees.map(tree => docTreeBank.add(tree))
-
-  docTreeBank.textualSummary
-
-  //make pattern
-  val pattern = TregexPattern.compile("[pattern]")
-
-  //boolean if match
-  pattern.matcher([tree]).find
-
-  //returns matching trees
-  val matchingTrees = trees.filter(tree => pattern.matcher(tree).find == true)
-
-  //next matching node
-  patter.matcher(docTreeBank).findNextMatchingNode
-
-  */
-
   //# of clauses / # of sentences
   def getSentenceComplexityScores = {
     //
@@ -473,31 +454,8 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   //TODO build patterns for each structure
     //from http://personal.psu.edu/xxl13/papers/Lu_inpress_ijcl.pdf
 
-  //clause
-  //"S|SINVSQ < (VP <# MD|VBD|VBP|VBZ)"
-    //fragment
-    //"FRAG > ROOT !<< VP"
 
-  //dependent clause
-  //"SBAR < (S|SINVSQ < (VP <# MD|VBD|VBP|VBZ))"
 
-  //T-unit (aka Sentence)
-    //how to isolate the INDEPENDENT portion?
-  //"S|SBARQ|SINV|SQ > ROOT | [$-- S|SBARQ|SINV|SQ !>> SBAR|VP]"
-
-  //complex T-unit
-  //"S|SBARQ|SINV|SQ [> ROOT | [$__ S|SBARQ|SINV|SQ !>> SBAR|VP] << (SBAR < (S|SQ|SINV < (VP <# MD|VBP|VBZ|VBD)))"
-
-  /*
-  MLC---
-  MLT
-  CP/C
-  CP/T
-  CN/C
-  CN/T
-  MLS
-  VP/T
-   */
   //return sentences grouped by structure
   def getSentenceStructures = {
     //
