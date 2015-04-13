@@ -417,7 +417,6 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     //
   }
 
-  //TODO fix -- outputting all 0s (meaning headTerminal is pulling -1 for everything
   //from Coh-Metrix research
   def getDistanceToVerb = {
     //assuming CollinsHeadFinder ALWAYS finds the main verb first
@@ -426,8 +425,21 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     val trees = this.getParseTrees
     val tuple = sentences zip trees
     for (item <- tuple) yield {
-      item._1.indexOf(item._2.headTerminal(cHF)).toDouble + 1d      //the index of the main verb in the original sentence
+      item._1.indexOf(item._2.headTerminal(cHF).toString).toDouble + 1d      //the index of the main verb in the original sentence
     }
+  }
+
+  def distanceToVerbStats = {
+    val stat = new DescriptiveStatistics()
+    this.getDistanceToVerb.map(stat.addValue)       //count
+    (
+      "minimum distance to verb" -> stat.getMin,
+      "25th %ile distance to verb" -> stat.getPercentile(25),
+      "mean distance to verb" -> stat.getMean,
+      "median distance to verb" -> stat.getPercentile(50),
+      "75th %ile distance to verb" -> stat.getPercentile(75),
+      "maximum distance to verb" -> stat.getMax
+      )
   }
 
   //TODO implement tregex patterns to count sentence structures used
