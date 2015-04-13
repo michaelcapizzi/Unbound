@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, InputStreamReader, InputStream}
 import edu.arizona.sista.learning.Datum
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.struct.Counter
-import edu.stanford.nlp.trees.{MemoryTreebank, DiskTreebank, Tree}
+import edu.stanford.nlp.trees.{CollinsHeadFinder, MemoryTreebank, DiskTreebank, Tree}
 import org.apache.commons.math3.stat.Frequency
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import spire.std.tuples
@@ -405,12 +405,29 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
     //
   }
 
+  def getClauseLengths = {
+    //
+  }
+
   def getSentenceSimilarityScores = {
     //
   }
 
   def sentenceSimilarityScoreStats = {
     //
+  }
+
+  //TODO fix -- outputting all 0s (meaning headTerminal is pulling -1 for everything
+  //from Coh-Metrix research
+  def getDistanceToVerb = {
+    //assuming CollinsHeadFinder ALWAYS finds the main verb first
+    val cHF = new CollinsHeadFinder()
+    val sentences = this.getSentences
+    val trees = this.getParseTrees
+    val tuple = sentences zip trees
+    for (item <- tuple) yield {
+      item._1.indexOf(item._2.headTerminal(cHF)).toDouble + 1d      //the index of the main verb in the original sentence
+    }
   }
 
   //TODO implement tregex patterns to count sentence structures used
@@ -436,8 +453,39 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
 
   */
 
-  //TODO build patterns for each structure
+  //# of clauses / # of sentences
+  def getSentenceComplexityScores = {
+    //
+  }
 
+  //TODO build patterns for each structure
+    //from http://personal.psu.edu/xxl13/papers/Lu_inpress_ijcl.pdf
+
+  //clause
+  //"S|SINVSQ < (VP <# MD|VBD|VBP|VBZ)"
+    //fragment
+    //"FRAG > ROOT !<< VP"
+
+  //dependent clause
+  //"SBAR < (S|SINVSQ < (VP <# MD|VBD|VBP|VBZ))"
+
+  //T-unit (aka Sentence)
+    //how to isolate the INDEPENDENT portion?
+  //"S|SBARQ|SINV|SQ > ROOT | [$-- S|SBARQ|SINV|SQ !>> SBAR|VP]"
+
+  //complex T-unit
+  //"S|SBARQ|SINV|SQ [> ROOT | [$__ S|SBARQ|SINV|SQ !>> SBAR|VP] << (SBAR < (S|SQ|SINV < (VP <# MD|VBP|VBZ|VBD)))"
+
+  /*
+  MLC---
+  MLT
+  CP/C
+  CP/T
+  CN/C
+  CN/T
+  MLS
+  VP/T
+   */
   //return sentences grouped by structure
   def getSentenceStructures = {
     //
