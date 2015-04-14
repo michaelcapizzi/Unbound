@@ -49,6 +49,17 @@ class TextDocument(val text: Vector[String], val processor: CoreNLPProcessor, va
         this.document.map(_.sentences.map(_.tags.get.toVector)).flatten.flatten,           //the POS tag
         this.document.map(_.sentences.map(_.entities.get.toVector)).flatten.flatten        //the NER label
         ).zipped.toVector
+    }
+
+  def lexicalTupleInSentences = {
+    for (sentence <- this.document.map(_.sentences).flatten) yield {
+        sentence.words.toVector zip
+          (
+            sentence.lemmas.get.toVector,
+            sentence.tags.get.toVector,
+            sentence.entities.get.toVector
+            ).zipped.toVector
+      }
   }
 
   def getWords = {
