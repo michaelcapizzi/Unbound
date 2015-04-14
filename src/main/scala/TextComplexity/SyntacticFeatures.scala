@@ -79,6 +79,31 @@ class SyntacticFeatures(textDocument: TextDocument) {
       )
   }
 
+  //from Coh-Metrix research
+  def getDistanceToVerb = {
+    //assuming CollinsHeadFinder ALWAYS finds the main verb first
+    val cHF = new CollinsHeadFinder()
+    val sentences = this.getSentences
+    val trees = this.getParseTrees
+    val tuple = sentences zip trees
+    for (item <- tuple) yield {
+      item._1.indexOf(item._2.headTerminal(cHF).toString).toDouble + 1d      //the index of the main verb in the original sentence
+    }
+  }
+
+  def distanceToVerbStats = {
+    val stat = new DescriptiveStatistics()
+    this.getDistanceToVerb.map(stat.addValue)       //count
+    (
+      "minimum distance to verb" -> stat.getMin,
+      "25th %ile distance to verb" -> stat.getPercentile(25),
+      "mean distance to verb" -> stat.getMean,
+      "median distance to verb" -> stat.getPercentile(50),
+      "75th %ile distance to verb" -> stat.getPercentile(75),
+      "maximum distance to verb" -> stat.getMax
+      )
+  }
+
   def getConstituents = {
     this.getParseTrees.map(_.constituents)
   }
@@ -116,6 +141,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
       )
   }
 
+  //TODO - house wordSimilarity data in MAP to improve performance
   def getWordSimilaritySentenceScores = {
 
     val importantWords =
@@ -135,7 +161,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
           }
         wordSimilarityVector.sum / wordSimilarityVector.length                    //take average similarity score between target and all words
       }
-      sentenceWordSimilarityVector.min                                          //take the least similar score from the sentence
+      if (sentenceWordSimilarityVector.isEmpty) 0 else sentenceWordSimilarityVector.min                                          //take the least similar score from the sentence
     }
 
     def wordSimilarity(wordOne: String, wordTwo: String, similarityFileName: String): Double = {
@@ -157,32 +183,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
     //
   }
 
-  //from Coh-Metrix research
-  def getDistanceToVerb = {
-    //assuming CollinsHeadFinder ALWAYS finds the main verb first
-    val cHF = new CollinsHeadFinder()
-    val sentences = this.getSentences
-    val trees = this.getParseTrees
-    val tuple = sentences zip trees
-    for (item <- tuple) yield {
-      item._1.indexOf(item._2.headTerminal(cHF).toString).toDouble + 1d      //the index of the main verb in the original sentence
-    }
-  }
-
-  def distanceToVerbStats = {
-    val stat = new DescriptiveStatistics()
-    this.getDistanceToVerb.map(stat.addValue)       //count
-    (
-      "minimum distance to verb" -> stat.getMin,
-      "25th %ile distance to verb" -> stat.getPercentile(25),
-      "mean distance to verb" -> stat.getMean,
-      "median distance to verb" -> stat.getPercentile(50),
-      "75th %ile distance to verb" -> stat.getPercentile(75),
-      "maximum distance to verb" -> stat.getMax
-      )
-  }
-
-  //Tregex patterns
+ //Tregex patterns
   //modified from http://personal.psu.edu/xxl13/papers/Lu_inpress_ijcl.pdf
 
   val clause = TregexPattern.compile("S [< (VP < (VP . CC <# MD|VBD|VBP|VBZ)) | < (VP <# MD|VBD|VBP|VBZ)]")
