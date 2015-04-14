@@ -443,18 +443,15 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       )
   }
 
-  //TODO implement tregex patterns to count sentence structures used
-  //Tregex?
+  //TODO verify tregex patterns for dependent and independent work
+  //from http://personal.psu.edu/xxl13/papers/Lu_inpress_ijcl.pdf
+  //TODO move back to TextDocument
+  //TODO build method to extract counts
 
   //# of clauses / # of sentences
   def getSentenceComplexityScores = {
     //
   }
-
-  //TODO build patterns for each structure
-    //from http://personal.psu.edu/xxl13/papers/Lu_inpress_ijcl.pdf
-
-
 
   //return sentences grouped by structure
   def getSentenceStructures = {
