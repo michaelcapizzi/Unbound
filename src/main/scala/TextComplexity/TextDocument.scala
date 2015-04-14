@@ -406,10 +406,6 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       )
   }
 
-  def getClauseLengths = {
-    //
-  }
-
   def getSentenceSimilarityScores = {
     //
   }
@@ -443,14 +439,34 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
       )
   }
 
+  //Tregex patterns
+      //modified from http://personal.psu.edu/xxl13/papers/Lu_inpress_ijcl.pdf
+
+  val clause = TregexPattern.compile("S [ < (VP < (VP . CC <# MD|VBD|VBP|VBZ)) | < (VP <# MD|VBD|VBP|VBZ)]")      //disjunction deals with conjoined verb or single verb
+
+
   //TODO verify tregex patterns for dependent and independent work
-  //from http://personal.psu.edu/xxl13/papers/Lu_inpress_ijcl.pdf
-  //TODO move back to TextDocument
-  //TODO build method to extract counts
+
+
+  def getClauseCounts = {
+    (for (tree <- this.getParseTrees) yield {
+      var counter = 0
+      val clauseMatcher = clause.matcher(tree)
+      while (clauseMatcher.find) {
+        counter += 1
+      }
+      counter.toDouble
+    }).toVector
+  }
+
+  def getClauseLengths = {
+    //how to do?
+      //use loop through and extract + tree.size
+  }
 
   //# of clauses / # of sentences
-  def getSentenceComplexityScores = {
-    //
+  def getSentenceComplexityScore = {
+    this.getClauseCounts.sum / this.sentenceSize.toDouble
   }
 
   //return sentences grouped by structure
