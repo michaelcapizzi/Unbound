@@ -7,6 +7,7 @@ import edu.stanford.nlp.trees.{CollinsHeadFinder, Tree}
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import scala.collection.JavaConverters._
 import scala.io.Source
+import Similarity._
 
 /**
  * Created by mcapizzi on 4/7/15.
@@ -141,8 +142,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
       )
   }
 
-  //TODO - house wordSimilarity data in MAP to improve performance
-  //TODO - figure out why no output (took 35 minutes)
+  //TODO - figure out why no output
   def getWordSimilaritySentenceScores = {
 
     val importantWords =
@@ -152,33 +152,24 @@ class SyntacticFeatures(textDocument: TextDocument) {
           map(_._1).map(_.toLowerCase).distinct //make lowercase and distinct
       }
 
-    for (sentence <- importantWords) yield {                                      //for each sentence
-    val sentenceWordSimilarityVector =
-      for (word <- sentence) yield {                                          //for each important target in sentence
-      val otherWords = sentence.filterNot(_ == word)
-        val wordSimilarityVector =
-          for (item <- otherWords) yield {                                        //for every other word
-            wordSimilarity(word, item, "wordSimilarityData.txt")                    //calculate wordSimilarity between target and word
-          }
-        wordSimilarityVector.sum / wordSimilarityVector.length                    //take average similarity score between target and all words
-      }
-      if (sentenceWordSimilarityVector.isEmpty) 0 else sentenceWordSimilarityVector.min                                          //take the least similar score from the sentence
-    }
-
-    def wordSimilarity(wordOne: String, wordTwo: String, similarityFileName: String): Double = {
-      val wordOneVector = SparseVector(Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/" + similarityFileName).getLines.
-        filter(line => line.startsWith(wordOne)).map(_.           //find the vector in the text file
-        split(" ").drop(1)).                                      //split and drop word (leaving just numbers)
-        toArray.flatten.map(_.toDouble))                          //flatten and turn into double
-      val wordTwoVector = SparseVector(Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/" + similarityFileName).getLines.
-          filter(line => line.startsWith(wordTwo)).map(_.           //find the vector in the text file
-          split(" ").drop(1)).                                      //split and drop word (leaving just numbers)
-          toArray.flatten.map(_.toDouble))                          //flatten and turn into double
-      val normalized = sqrt(wordOneVector dot wordOneVector) * sqrt(wordTwoVector dot wordTwoVector)
-      val dotProduct = if (wordOneVector.length != wordTwoVector.length) 0 else wordOneVector dot wordTwoVector     //if one or more words not in data, then 0
-      dotProduct / normalized
+    for (sentence <- importantWords) yield {
+      //for each sentence
+      val sentenceWordSimilarityVector =
+        for (word <- sentence) yield {
+          //for each important target in sentence
+          val otherWords = sentence.filterNot(_ == word)
+          val wordSimilarityVector =
+            for (item <- otherWords) yield {
+              //for every other word
+              wordSimilarity(word, item, "wordSimilarityData.txt") //calculate wordSimilarity between target and word
+            }
+          wordSimilarityVector.sum / wordSimilarityVector.length //take average similarity score between target and all words
+        }
+      if (sentenceWordSimilarityVector.isEmpty) 0 else sentenceWordSimilarityVector.min //take the least similar score from the sentence
     }
   }
+
+
 
   def wordSimilaritySentenceScoreStats = {
     //

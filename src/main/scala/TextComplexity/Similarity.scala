@@ -13,6 +13,22 @@ import scala.io.Source
  */
 object Similarity {
 
+  //TODO build map of similarities to access - current took 35 minutes
+  def wordSimilarity(wordOne: String, wordTwo: String, similarityFileName: String): Double = {
+    val wordOneVector = SparseVector(Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/" + similarityFileName).getLines.
+      filter(line => line.startsWith(wordOne)).map(_.           //find the vector in the text file
+      split(" ").drop(1)).                                      //split and drop word (leaving just numbers)
+      toArray.flatten.map(_.toDouble))                          //flatten and turn into double
+    val wordTwoVector = SparseVector(Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/" + similarityFileName).getLines.
+        filter(line => line.startsWith(wordTwo)).map(_.           //find the vector in the text file
+        split(" ").drop(1)).                                      //split and drop word (leaving just numbers)
+        toArray.flatten.map(_.toDouble))                          //flatten and turn into double
+    val normalized = sqrt(wordOneVector dot wordOneVector) * sqrt(wordTwoVector dot wordTwoVector)
+    val dotProduct = if (wordOneVector.length != wordTwoVector.length) 0 else wordOneVector dot wordTwoVector     //if one or more words not in data, then 0
+    dotProduct / normalized
+  }
+
+
 //calculate similarity for every word in a sentence in relation to its neighbors
 
   //extract all distinct words from all texts -- ROWS in similarity matrix
@@ -103,11 +119,6 @@ object Similarity {
     dotProduct / normalized
   }
 
-  //how to calculate a score for the entire sentence
-    //for each word in the sentence...
-      //make a vector of its similarity score with each other word in the sentence
-    //use the dot product?  product?  sum?
-    //normalize?
 
 
   /////////////////////test:
