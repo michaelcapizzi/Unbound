@@ -128,43 +128,6 @@ class LexicalFeatures(textDocument: TextDocument) {
   }
 
 
-  def getWordSimilaritySentenceScores = {
-
-    val importantWords =
-      for (sentence <- textDocument.lexicalTupleInSentences) yield {
-        sentence.filter(word => word._2._2.matches("NN.") || word._2._2.matches("VB.") || word._2._2.matches("JJ.") || word._2._2.matches("RB.")). //keep only important POS
-          filterNot(entity => (entity._2._3.matches("PERSON") || entity._2._3.matches("LOCATION")) && entity._2._1.matches("[A-Z]")). //drop proper nouns
-          map(_._1).map(_.toLowerCase).distinct //make lowercase and distinct
-      }
-
-    for (sentence <- importantWords) yield {                                      //for each sentence
-      val sentenceWordSimilarityVector =
-        for (word <- sentence) yield {                                          //for each important target in sentence
-          val otherWords = sentence.filterNot(_ == word)
-          val wordSimilarityVector =
-            for (item <- otherWords) yield {                                        //for every other word
-              wordSimilarity(word, item, "wordSimilarityData.txt")                    //calculate wordSimilarity between target and word
-          }
-        wordSimilarityVector.sum / wordSimilarityVector.length                    //take average similarity score between target and all words
-      }
-      sentenceWordSimilarityVector.min                                          //take the least similar score from the sentence
-    }
-
-    def wordSimilarity(wordOne: String, wordTwo: String, similarityFileName: String): Double = {
-      val wordOneVector = SparseVector(Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/" + similarityFileName).getLines.
-        filter(line => line.startsWith(wordOne)).map(_.           //find the vector in the text file
-        split(" ").drop(1)).                                      //split and drop word (leaving just numbers)
-        toArray.flatten.map(_.toDouble))                          //flatten and turn into double
-      val wordTwoVector = SparseVector(Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/" + similarityFileName).getLines.
-          filter(line => line.startsWith(wordTwo)).map(_.           //find the vector in the text file
-          split(" ").drop(1)).                                      //split and drop word (leaving just numbers)
-          toArray.flatten.map(_.toDouble))                          //flatten and turn into double
-      val normalized = sqrt(wordOneVector dot wordOneVector) * sqrt(wordTwoVector dot wordTwoVector)
-      val dotProduct = if (wordOneVector.length != wordTwoVector.length) 0 else wordOneVector dot wordTwoVector     //if one or more words not in data, then 0
-      dotProduct / normalized
-    }
-  }
-
   //# of distinct Named Entities
   // could be an approximation of character? --> PERSON only
   //In combination with Capital letter, could represent proper locations too --> LOCATION + capital letter
