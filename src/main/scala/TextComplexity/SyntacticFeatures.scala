@@ -142,6 +142,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   }
 
   //TODO - house wordSimilarity data in MAP to improve performance
+  //TODO - figure out why no output (took 35 minutes)
   def getWordSimilaritySentenceScores = {
 
     val importantWords =
