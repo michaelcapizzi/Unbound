@@ -7,7 +7,7 @@ import scala.io.Source
  */
 object Concreteness {
 
-  val concretenessRaw = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/concreteness_data.csv").getLines.toVector.map(_.split(","))
+  val concretenessRaw = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/concretenessData.csv").getLines.toVector.map(_.split(","))
 
   val concretenessMap = concretenessRaw.map(item =>
       item(0) -> //the word
