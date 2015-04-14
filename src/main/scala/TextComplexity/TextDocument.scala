@@ -451,7 +451,6 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   val independentClause = TregexPattern.compile("S !> SBAR [< (VP < (VP . CC <# MD|VBD|VBP|VBZ)) | < (VP <# MD|VBD|VBP|VBZ)]")
   //matches any S node that is a clause but is NOT dominated by an SBAR
 
-  //val dependentClause = TregexPattern.compile("SBAR < (S < (VP <# MD|VBD|VBP|VBZ))")
   val dependentClause = TregexPattern.compile("S > SBAR [< (VP < (VP . CC <# MD|VBD|VBP|VBZ)) | < (VP <# MD|VBD|VBP|VBZ)]")
   //matches any S node that is a clause that IS dominated by an SBAR
 
@@ -526,18 +525,15 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   //https://github.com/sistanlp/processors/blob/master/src/main/scala/edu/arizona/sista/discourse/rstparser/DiscourseTree.scala
 
   def getDiscourseTrees = {
-    document.map(_.discourseTree)/*.
-      map(_.get.toString.split("\n").map(_.trim).
-      take(1).head.
-      split(" ")*/
+    document.map(_.discourseTree).map(_.get)
   }
 
   def getDiscourseRelations = {
     val discourseRelationsRaw =
       this.getDiscourseTrees.map(_.           //get discourse trees
-      get.toString.split("\n").map(_.       //split by line
-      trim)).map(paragraph =>               //remove whitespace
-      paragraph.filterNot(_.                //remove text, keeping details
+      toString.split("\n").map(_.             //split by line
+      trim)).map(paragraph =>                 //remove whitespace
+      paragraph.filterNot(_.                  //remove text, keeping details
       startsWith("TEXT")))
     for (paragraph <- discourseRelationsRaw) yield {
       if (paragraph.nonEmpty) {
