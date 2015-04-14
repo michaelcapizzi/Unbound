@@ -442,10 +442,18 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   //Tregex patterns
       //modified from http://personal.psu.edu/xxl13/papers/Lu_inpress_ijcl.pdf
 
-  val clause = TregexPattern.compile("S [ < (VP < (VP . CC <# MD|VBD|VBP|VBZ)) | < (VP <# MD|VBD|VBP|VBZ)]")      //disjunction deals with conjoined verb or single verb
+  val clause = TregexPattern.compile("S [< (VP < (VP . CC <# MD|VBD|VBP|VBZ)) | < (VP <# MD|VBD|VBP|VBZ)]")
+  //matches any S node that either (1) dominates a VP whose head is a finite verb or (2) dominates a VP consisting of conjoined VPs whose head is a finite verb
 
+  val fragment = TregexPattern.compile("ROOT !<< VP")
+  //matches any tree without a VP
 
-  //TODO verify tregex patterns for dependent and independent work
+  val independentClause = TregexPattern.compile("S !> SBAR [< (VP < (VP . CC <# MD|VBD|VBP|VBZ)) | < (VP <# MD|VBD|VBP|VBZ)]")
+  //matches any S node that is a clause but is NOT dominated by an SBAR
+
+  //val dependentClause = TregexPattern.compile("SBAR < (S < (VP <# MD|VBD|VBP|VBZ))")
+  val dependentClause = TregexPattern.compile("S > SBAR [< (VP < (VP . CC <# MD|VBD|VBP|VBZ)) | < (VP <# MD|VBD|VBP|VBZ)]")
+  //matches any S node that is a clause that IS dominated by an SBAR
 
 
   def getClauseCounts = {
@@ -470,8 +478,25 @@ class TextDocument(text: Vector[String], processor: CoreNLPProcessor, document: 
   }
 
   //return sentences grouped by structure
-  def getSentenceStructures = {
-    //
+  def getClauseTypes = {
+    val trees = this.getParseTrees
+    for (tree <- trees) yield {
+      var indCounter = 0
+      var depCounter = 0
+      val independentMatcher = independentClause.matcher(tree)
+      val dependentMatcher = dependentClause.matcher(tree)
+      val clauseMatcher = clause.matcher(tree)
+      while (clauseMatcher.find) {
+        if (independentMatcher.find) indCounter += 1
+        else if (dependentMatcher.find) depCounter += 1
+      }
+      ("independent clauses" -> indCounter, "dependent clauses" -> depCounter)
+    }
+  }
+
+  //TODO build to identify sentence type
+  def getSentenceStructureTypes = {
+    this.getClauseTypes
   }
 
 
