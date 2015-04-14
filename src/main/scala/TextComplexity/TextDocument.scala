@@ -30,14 +30,12 @@ class TextDocument(val text: Vector[String], val processor: CoreNLPProcessor, va
     document.map(processor.annotate)
   }
 
-  //TODO build method to retrieve from file
+  //TODO build method to retrieve from file -- how to loop to handle multiple docs (e.g. paragraphs) in one text file?
   def retrieveAnnotation = {
-    //def getBufferedReader(filename: String): BufferedReader = {
-    //val fileStream = new FileInputStream(filename);
-    //val gzipStream = new GZIPInputStream(fileStream);
-    //val decoder = new InputStreamReader(gzipStream, "UTF-8");
-    //new BufferedReader(decoder);
-    //}
+    //val buff = new BufferedReader(new FileReader([file location]
+    //val serial = new DocumentSerializer()
+    //serial.load(buff)
+
   }
 
   ////////////////////////// for normalizing //////////////////////////
