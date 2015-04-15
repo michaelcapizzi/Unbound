@@ -1,9 +1,10 @@
 package TextComplexity
 
+
 /**
  * Created by mcapizzi on 4/15/15.
  */
-class NaiveBayes(trainingData: Vector[TextDocument], testDocument: TextDocument) {
+class NaiveBayes(trainingData: Vector[TextDocument], testDocument: TextDocument, stopWords: Vector[String], featureFrequencyThreshold: Int, mutualInformationThreshold: Int) {
 
   //total # of documents
   def trainingDataSize = {
@@ -23,21 +24,27 @@ class NaiveBayes(trainingData: Vector[TextDocument], testDocument: TextDocument)
   }
 
   //class prior probabilities
-        //number of documents in a class / total number of documents
   def priorProbabilities = {
     (for (possibleClass <- this.classCounts.keySet) yield {
-      possibleClass -> classCounts(possibleClass) / this.trainingDataSize
+      possibleClass -> classCounts(possibleClass) / this.trainingDataSize             //number of documents in a class / total number of documents
     }).toMap
   }
 
   //extract all vocabulary from all documents in training
   def extractVocabulary = {
-    trainingData.map(textDocument => textDocument.getWords.map(_.toLowerCase)).flatten.distinct
+    trainingData.map(textDocument =>                                                  //for each document,
+      textDocument.getWords.map(                                                        //get words
+      _.toLowerCase)).flatten.distinct.                                                 //put all to lowercase, flatten, and take only distinct
+      diff(stopWords)                                                                   //filter out stop words
   }
 
   //concatenate all documents for each class into one document
-  def makeDocumentConcatenized = {
-    //
+  def makeDocumentsConcatenized = {
+    for (possibleClass <- possibleClasses) yield {                                    //for each class
+      trainingData.filter(doc => doc.gradeLevel == possibleClass).map(                  //take the documents of that class
+        textDocument => textDocument.getWords.map(_.toLowerCase)).flatten.               //get words, put to lowercase, and flatten
+        diff(stopWords)                                                                  //filter out stop words
+    }
   }
 
 
