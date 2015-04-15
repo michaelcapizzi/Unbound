@@ -17,7 +17,7 @@ class ParagraphFeatures(textDocument: TextDocument) {
   def paragraphLengthStats = {
     val stat = new DescriptiveStatistics()
     this.getParagraphLengths.map(stat.addValue(_))
-    (
+    Map(
       "minimum paragraph length" -> stat.getMin,
       "25th %ile paragraph length" -> stat.getPercentile(25),
       "mean paragraph length" -> stat.getMean,

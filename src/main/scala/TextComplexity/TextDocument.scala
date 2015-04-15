@@ -20,8 +20,6 @@ import scala.collection.mutable
 //each item in vector is a full paragraph
 class TextDocument(val text: Vector[String], val processor: CoreNLPProcessor, val document: Vector[edu.arizona.sista.processors.Document], val author: String, val title: String, val chapter: String, val gradeLevel: String) {
 
-  //TODO - merge branhces
-
   def fullText = {
     text.mkString(" ")
   }

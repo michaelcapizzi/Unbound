@@ -4,6 +4,7 @@ import breeze.linalg.SparseVector
 import breeze.numerics._
 import edu.stanford.nlp.trees.tregex.TregexPattern
 import edu.stanford.nlp.trees.{CollinsHeadFinder, Tree}
+import org.apache.commons.math3.stat.Frequency
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import scala.collection.JavaConverters._
 import scala.io.Source
@@ -29,7 +30,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def sentenceLengthStats = {
     val stat = new DescriptiveStatistics()
     this.getSentenceLengths.map(stat.addValue(_))           //count
-    (
+    Map(
       "sentence length minimum" -> stat.getMin,
       "25th %ile sentence length" -> stat.getPercentile(50),
       "sentence length mean" -> stat.getMean,
@@ -53,7 +54,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def treeSizeStats = {
     val stat = new DescriptiveStatistics()
     this.getTreeSizes.map(stat.addValue)       //count
-    (
+    Map(
       "minimum tree size" -> stat.getMin,
       "25th %ile tree size" -> stat.getPercentile(25),
       "mean tree size" -> stat.getMean,
@@ -71,7 +72,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def treeDepthStats = {
     val stat = new DescriptiveStatistics()
     this.getTreeDepths.map(stat.addValue)       //count
-    (
+    Map(
       "minimum tree depth" -> stat.getMin,
       "25th %ile tree depth" -> stat.getPercentile(25),
       "mean tree depth" -> stat.getMean,
@@ -96,7 +97,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def distanceToVerbStats = {
     val stat = new DescriptiveStatistics()
     this.getDistanceToVerb.map(stat.addValue)       //count
-    (
+    Map(
       "minimum distance to verb" -> stat.getMin,
       "25th %ile distance to verb" -> stat.getPercentile(25),
       "mean distance to verb" -> stat.getMean,
@@ -110,10 +111,10 @@ class SyntacticFeatures(textDocument: TextDocument) {
     this.getParseTrees.map(_.constituents)
   }
 
-  def constituentsCountStats = {
+  def constituentCountStats = {
     val stat = new DescriptiveStatistics()
     this.getConstituents.map(_.size).map(stat.addValue(_))                //count
-    (
+    Map(
       "minimum number of constituents in a sentence" -> stat.getMin,
       "25th %ile number of constituents per sentence" -> stat.getPercentile(25),
       "mean number of constituents per sentence" -> stat.getMean,
@@ -133,12 +134,12 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def constituentLengthStats = {
     val stat = new DescriptiveStatistics()
     this.getConstituentLengths.map(stat.addValue(_))            //count
-    (
+    Map(
       "constituent length minimum" -> stat.getMin,
       "25th %ile constituent length" -> stat.getPercentile(25),
       "constituent length mean" -> stat.getMean,
       "constituent length median" -> stat.getPercentile(50),
-      "75th %iler constituent length" -> stat.getPercentile(75),
+      "75th %ile constituent length" -> stat.getPercentile(75),
       "constituent length maximum" -> stat.getMax
       )
   }
@@ -200,14 +201,22 @@ class SyntacticFeatures(textDocument: TextDocument) {
           }
         }
       }
-      val summedSentenceSimilarities = sentenceSimilarities.map(wordLevel => wordLevel.sum)             //sum up the similarity scores
+      val summedSentenceSimilarities = sentenceSimilarities.map(wordLevel => wordLevel.sum / wordLevel.length.toDouble)     //take similarity score for each word divided by number of words
       if (summedSentenceSimilarities.isEmpty) 0.0 else summedSentenceSimilarities.min                   //take the least similar score from the sentence
     }
   }
 
-  //TODO build stats
   def wordSimilaritySentenceScoreStats = {
-    //
+    val stat = new DescriptiveStatistics()
+    this.getWordSimilaritySentenceScores.map(stat.addValue)            //count
+    Map(
+      "minimum similarity sentence score" -> stat.getMin,
+      "25th %ile similarity sentence score" -> stat.getPercentile(25),
+      "mean similarity sentence score" -> stat.getMean,
+      "median similarity sentence score" -> stat.getPercentile(50),
+      "75th %ile similarity sentence score" -> stat.getPercentile(75),
+      "maximum similarity sentence score" -> stat.getMax
+      )
   }
 
  //Tregex patterns
@@ -249,7 +258,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   }
 
   //return sentences grouped by structure
-  def getClauseTypes = {
+  def getClauseTypeCounts = {
     val trees = this.getParseTrees
     for (tree <- trees) yield {
       var indCounter = 0
@@ -265,8 +274,29 @@ class SyntacticFeatures(textDocument: TextDocument) {
     }
   }
 
-  //TODO build to identify sentence type
   def getSentenceStructureTypes = {
-    this.getClauseTypes
+    this.getClauseTypeCounts.map(sentence =>
+      if (sentence._1._2 == 1 && sentence._2._2 == 0) "simple"
+      else if (sentence._1._2 == 1 && sentence._2._2 >= 1) "complex"
+      else if (sentence._1._2 >= 2 && sentence._2._2 == 0) "compound"
+      else if (sentence._1._2 >= 2 && sentence._2._2 >= 1) "compound-complex"
+      else "fragment"
+    ).toVector
   }
+
+  def sentenceStructureTypeStats = {
+    val freq = new Frequency()
+    this.getSentenceStructureTypes.map(freq.addValue(_))            //count
+    Map(
+      "ratio of simple sentences" -> freq.getPct("simple"),
+      "ratio of complex sentences" -> freq.getPct("complex"),
+      "ratio of compound sentences" -> freq.getPct("compound"),
+      "ratio of compound-complex sentences" -> freq.getPct("compound-complex"),
+      "ratio of fragments" -> freq.getPct("fragment")
+      )
+  }
+
+
+
+
 }
