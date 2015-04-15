@@ -142,33 +142,24 @@ class SyntacticFeatures(textDocument: TextDocument) {
       )
   }
 
-  //TODO - figure out why no output
+  //TODO - cache results from lookups to save time from multiple lookups
   def getWordSimilaritySentenceScores = {
-
-    val importantWords =
-      for (sentence <- textDocument.lexicalTupleInSentences) yield {
-        sentence.filter(word => word._2._2.matches("NN.") || word._2._2.matches("VB.") || word._2._2.matches("JJ.") || word._2._2.matches("RB.")). //keep only important POS
-          filterNot(entity => (entity._2._3.matches("PERSON") || entity._2._3.matches("LOCATION")) && entity._2._1.matches("[A-Z]")). //drop proper nouns
-          map(_._1).map(_.toLowerCase).distinct //make lowercase and distinct
+    val importantWords = for (sentence <- textDocument.lexicalTupleInSentences) yield {
+        sentence.filter(word => word._2._2.matches("NN.*") || word._2._2.matches("VB.*") || word._2._2.matches("JJ.*") || word._2._2.matches("RB.*")).    //keep *only important POS
+          filterNot(entity => (entity._2._3.matches("PERSON") || entity._2._3.matches("LOCATION")) && entity._2._1.matches("[A-Z]")).                     //drop proper nouns
+          map(_._1).map(_.toLowerCase).distinct                                                                                                           //make lowercase and distinct
       }
 
-    for (sentence <- importantWords) yield {
-      //for each sentence
-      val sentenceWordSimilarityVector =
-        for (word <- sentence) yield {
-          //for each important target in sentence
-          val otherWords = sentence.filterNot(_ == word)
-          val wordSimilarityVector =
-            for (item <- otherWords) yield {
-              //for every other word
-              wordSimilarity(word, item, "wordSimilarityData.txt") //calculate wordSimilarity between target and word
-            }
-          wordSimilarityVector.sum / wordSimilarityVector.length //take average similarity score between target and all words
+    for (sentence <- importantWords) yield {                                                            //for each sentence
+      val sentenceSimilarities = for (word <- sentence) yield {                                           //for each important target in sentence
+        for (item <- sentence.filterNot(_ == word)) yield {                                                 //for every other word
+            wordSimilarity(word, item, "wordSimilarityData.txt")                                              //calculate wordSimilarity between target and word
         }
-      if (sentenceWordSimilarityVector.isEmpty) 0 else sentenceWordSimilarityVector.min //take the least similar score from the sentence
+      }
+      val summedSentenceSimilarities = sentenceSimilarities.map(wordLevel => wordLevel.sum)             //sum up the similarity scores
+      if (summedSentenceSimilarities.isEmpty) 0.0 else summedSentenceSimilarities.min                   //take the least similar score from the sentence
     }
   }
-
 
 
   def wordSimilaritySentenceScoreStats = {
