@@ -13,24 +13,41 @@ import scala.io.Source
  */
 object Similarity {
 
-  //TODO find way to cache results to speed up looking up duplicate words
-  def wordSimilarity(wordOne: String, wordTwo: String, similarityFileName: String): Double = {
+  /*def wordSimilarityTextLookUp(wordOne: String, wordTwo: String, similarityFileName: String): Double = {
     val wordOneVector = SparseVector(Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/" + similarityFileName).getLines.
-      filter(line => line.startsWith(wordOne)).map(_.           //find the vector in the text file
+      find(line => line.startsWith(wordOne)).map(_.           //find the vector in the text file
       split(" ").drop(1)).                                      //split and drop word (leaving just numbers)
       toArray.flatten.map(_.toDouble))                          //flatten and turn into double
 
     val wordTwoVector = SparseVector(Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/" + similarityFileName).getLines.
-        filter(line => line.startsWith(wordTwo)).map(_.           //find the vector in the text file
+        find(line => line.startsWith(wordTwo)).map(_.           //find the vector in the text file
         split(" ").drop(1)).                                      //split and drop word (leaving just numbers)
         toArray.flatten.map(_.toDouble))                          //flatten and turn into double
 
     val normalized = sqrt(wordOneVector dot wordOneVector) * sqrt(wordTwoVector dot wordTwoVector)
-    val dotProduct = if (wordOneVector.length != wordTwoVector.length) 0 else wordOneVector dot wordTwoVector     //if one or more words not in data, then 0
+    val dotProduct = if (wordOneVector.length == 0 || wordTwoVector.length == 0) 0 else wordOneVector dot wordTwoVector
 
     dotProduct / normalized
   }
 
+  def wordSimilarityHashLookUp(wordOne: String, wordTwo: String, similarityHash: Map[String, Array[Double]]): Double = {
+    val wordOneVector = SparseVector(similarityHash(wordOne))
+    val wordTwoVector = SparseVector(similarityHash(wordTwo))
+
+    val normalized = sqrt(wordOneVector dot wordOneVector) * sqrt(wordTwoVector dot wordTwoVector)
+    val dotProduct = if (wordOneVector.length == 0 || wordTwoVector.length == 0) 0 else wordOneVector dot wordTwoVector
+
+    dotProduct / normalized
+  }*/
+
+  def wordSimilarityVector(wordOneVector: SparseVector[Double], wordTwoVector: SparseVector[Double]): Double = {
+    val normalized = sqrt(wordOneVector dot wordOneVector) * sqrt(wordTwoVector dot wordTwoVector)
+    val dotProduct = if (wordOneVector.length == 0 || wordTwoVector.length == 0) 0 else wordOneVector dot wordTwoVector
+
+    if (dotProduct == 0) 0 else dotProduct / normalized
+  }
+
+/*
 
 //calculate similarity for every word in a sentence in relation to its neighbors
 
@@ -140,6 +157,7 @@ object Similarity {
   //count matrix
   val wordMap = makeWordMap(allSentencesFromAllTexts, countMatrixRows)*/
 
+*/
 
 
 }
