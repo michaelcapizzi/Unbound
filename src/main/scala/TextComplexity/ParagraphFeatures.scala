@@ -27,11 +27,10 @@ class ParagraphFeatures(textDocument: TextDocument) {
       )
   }
 
-  //coreference
-
-
   //discourse
   //https://github.com/sistanlp/processors/blob/master/src/main/scala/edu/arizona/sista/discourse/rstparser/DiscourseTree.scala
+
+  //TODO build better methods here
 
   def getDiscourseTrees = {
     textDocument.document.map(_.discourseTree).map(_.get)

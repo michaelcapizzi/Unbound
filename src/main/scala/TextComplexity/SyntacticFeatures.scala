@@ -205,8 +205,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
     }
   }
 
-
-
+  //TODO build stats
   def wordSimilaritySentenceScoreStats = {
     //
   }
@@ -238,6 +237,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
     }).toVector
   }
 
+  //TODO figure out how to do
   def getClauseLengths = {
     //how to do?
     //use loop through and extract + tree.size
