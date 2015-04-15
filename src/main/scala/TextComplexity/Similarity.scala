@@ -13,6 +13,7 @@ import scala.io.Source
  */
 object Similarity {
 
+
   /*def wordSimilarityTextLookUp(wordOne: String, wordTwo: String, similarityFileName: String): Double = {
     val wordOneVector = SparseVector(Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/" + similarityFileName).getLines.
       find(line => line.startsWith(wordOne)).map(_.           //find the vector in the text file
