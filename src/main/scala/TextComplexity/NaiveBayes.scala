@@ -9,6 +9,7 @@ import scala.math._
 class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextDocument, val stopWords: Vector[String], featureFrequencyThreshold: Int, mutualInformationThreshold: Int) {
 
   //TODO build test from NBSample in SISTA555 - project 2
+  //TODO why errors when trying to access doubles?
 
   //total # of documents
   def trainingDataSize = {
@@ -88,6 +89,11 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextD
           log(number)).sum                                                                          //take the log and sum
       )
     }
+  }
+
+  def determineArgMax = {
+    val sorted = this.getTestScores.sortBy(_._2).reverse
+    sorted.head._1
   }
 
 
