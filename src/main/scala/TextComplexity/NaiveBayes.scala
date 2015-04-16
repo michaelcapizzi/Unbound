@@ -6,7 +6,7 @@ import scala.math._
 /**
  * Created by mcapizzi on 4/15/15.
  */
-class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextDocument, val stopWords: Vector[String], featureFrequencyThreshold: Int, mutualInformationThreshold: Int) {
+class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextDocument, val stopWords: Vector[String], countFrequencyThreshold: Int, documentFrequencyThreshold: Int, mutualInformationThreshold: Int) {
 
   //TODO implement feature selection parameters
 

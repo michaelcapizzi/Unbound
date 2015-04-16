@@ -31,8 +31,6 @@ class ParagraphFeatures(textDocument: TextDocument) {
   //discourse
   //https://github.com/sistanlp/processors/blob/master/src/main/scala/edu/arizona/sista/discourse/rstparser/DiscourseTree.scala
 
-  //TODO build better methods here
-
   def getDiscourseTrees = {
     textDocument.document.map(_.discourseTree).map(_.get)
   }
@@ -49,24 +47,6 @@ class ParagraphFeatures(textDocument: TextDocument) {
       ))
   }
 
-
-  /*
-        toString.split("\n").map(_.             //split by line
-        trim)).map(paragraph =>                 //remove whitespace
-        paragraph.filterNot(_.                  //remove text, keeping details
-          startsWith("TEXT")))
-    for (paragraph <- discourseRelationsRaw) yield {
-      if (paragraph.nonEmpty) {
-        val relationsRegex = """\s*(\w+-?\w+)( \(\w+\))?""".r
-        paragraph.map(each =>
-          each match {
-            case relationsRegex(relation, direction) => (relation, direction)
-          }
-        )
-      }
-    }
-  }
-*/
 
   //TODO add counts for each relation type
   def discourseRelationsStats = {

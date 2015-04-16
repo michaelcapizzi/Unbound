@@ -77,18 +77,10 @@ class LexicalFeatures(textDocument: TextDocument) {
       toDouble / textDocument.wordCountMinusProperNouns     //normalized over wordCountMinusProperNouns
   }
 
-  //total # of conjunctions used
-  def conjunctionFrequency = {
-    textDocument.lexicalTuple.toVector.
-      filter(_._2._2.matches("CC")).
-      map(_._2._1).length.                          //count all uses
-      toDouble / textDocument.sentenceSize.toDouble         //normalized over number of sentences
-  }
-
-  //TODO normalize over wordCountMinusProperNouns
   //# of distinct word families
   def wordFamilyCount = {
     //stemmer? to detect word families? can I do it?
+    //normalize over wordCountMinusProperNouns
   }
 
   //word concreteness
@@ -112,6 +104,7 @@ class LexicalFeatures(textDocument: TextDocument) {
       ).filterNot(missing =>
         missing._2 == 99)                                                                                       //remove words not in database
     concretenessDouble.map(tuple => stat.addValue(tuple._2))                                                  //count
+
     Map(
       "number of tokens present in database normalized over non-proper noun word count" -> concretenessDouble.length.toDouble / textDocument.wordCountMinusProperNouns,
       "number of tokens not present in database normalized over non-proper noun word count" -> removed / textDocument.wordCountMinusProperNouns,

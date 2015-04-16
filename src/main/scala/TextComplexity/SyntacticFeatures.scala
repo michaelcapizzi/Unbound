@@ -30,6 +30,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def sentenceLengthStats = {
     val stat = new DescriptiveStatistics()
     this.getSentenceLengths.map(stat.addValue(_))           //count
+
     Map(
       "sentence length minimum" -> stat.getMin,
       "25th %ile sentence length" -> stat.getPercentile(50),
@@ -38,6 +39,14 @@ class SyntacticFeatures(textDocument: TextDocument) {
       "75th %ile sentence length" -> stat.getPercentile(75),
       "sentence length maximum" -> stat.getMax
       )
+  }
+
+  //total # of conjunctions used
+  def conjunctionFrequency = {
+    textDocument.lexicalTuple.toVector.
+      filter(_._2._2.matches("CC")).
+      map(_._2._1).length.                          //count all uses
+      toDouble / textDocument.sentenceSize.toDouble         //normalized over number of sentences
   }
 
   def getParseTrees = {
@@ -72,6 +81,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def treeDepthStats = {
     val stat = new DescriptiveStatistics()
     this.getTreeDepths.map(stat.addValue)       //count
+
     Map(
       "minimum tree depth" -> stat.getMin,
       "25th %ile tree depth" -> stat.getPercentile(25),
@@ -97,6 +107,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def distanceToVerbStats = {
     val stat = new DescriptiveStatistics()
     this.getDistanceToVerb.map(stat.addValue)       //count
+
     Map(
       "minimum distance to verb" -> stat.getMin,
       "25th %ile distance to verb" -> stat.getPercentile(25),
@@ -114,6 +125,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def constituentCountStats = {
     val stat = new DescriptiveStatistics()
     this.getConstituents.map(_.size).map(stat.addValue(_))                //count
+
     Map(
       "minimum number of constituents in a sentence" -> stat.getMin,
       "25th %ile number of constituents per sentence" -> stat.getPercentile(25),
@@ -134,6 +146,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def constituentLengthStats = {
     val stat = new DescriptiveStatistics()
     this.getConstituentLengths.map(stat.addValue(_))            //count
+
     Map(
       "constituent length minimum" -> stat.getMin,
       "25th %ile constituent length" -> stat.getPercentile(25),
@@ -209,6 +222,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def wordSimilaritySentenceScoreStats = {
     val stat = new DescriptiveStatistics()
     this.getWordSimilaritySentenceScores.map(stat.addValue)            //count
+
     Map(
       "minimum similarity sentence score" -> stat.getMin,
       "25th %ile similarity sentence score" -> stat.getPercentile(25),
@@ -246,7 +260,6 @@ class SyntacticFeatures(textDocument: TextDocument) {
     }).toVector
   }
 
-  //TODO figure out how to do
   def getClauseLengths = {
     //how to do?
     //use loop through and extract + tree.size
@@ -287,6 +300,7 @@ class SyntacticFeatures(textDocument: TextDocument) {
   def sentenceStructureTypeStats = {
     val freq = new Frequency()
     this.getSentenceStructureTypes.map(freq.addValue(_))            //count
+
     Map(
       "ratio of simple sentences" -> freq.getPct("simple"),
       "ratio of complex sentences" -> freq.getPct("complex"),

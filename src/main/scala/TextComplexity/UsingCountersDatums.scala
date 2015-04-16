@@ -27,7 +27,7 @@ object UsingCountersDatums {
   }
 
 
-  //TODO implement Naive Bayes with this
+  //implement Naive Bayes with this
   //make RVFDatum with items in ()
   val datum2 = new RVFDatum[String, String]("good",counter)
 
