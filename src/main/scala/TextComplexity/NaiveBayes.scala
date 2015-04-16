@@ -8,9 +8,6 @@ import scala.math._
  */
 class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextDocument, val stopWords: Vector[String], featureFrequencyThreshold: Int, mutualInformationThreshold: Int) {
 
-  //TODO build test from NBSample in SISTA555 - project 2
-  //TODO why errors when trying to access doubles?
-
   //total # of documents
   def trainingDataSize = {
     trainingData.length.toDouble
@@ -58,12 +55,12 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextD
     val docConcat = this.makeDocumentsConcatenized
 
     for (possibleClass <- possibleClasses) yield {
-      val smoothing = docConcat(possibleClass).length + vocabulary.length.toDouble
+      val smoothingDenominator = docConcat(possibleClass).length.toDouble + vocabulary.length.toDouble
       (
-        possibleClass,
-        1.0 / smoothing, {
-        vocabulary.map(word =>
-          word -> (docConcat(possibleClass).count(item => item == word) + 1).toDouble / smoothing
+        possibleClass,                                                                                                    //the class
+        1d / smoothingDenominator, {                                                                                      //the smoothing value for that class
+        vocabulary.map(word =>                                                                                            //for each word
+          word -> (docConcat(possibleClass).count(item => item == word) + 1).toDouble / smoothingDenominator.toDouble           //the count in the class + 1 / smoothingDenominator
         )
       }.toMap
         )
@@ -72,11 +69,11 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextD
 
   //tokenize test document
   def testDocumentTokenize = {
-    testDocument.getWords
+    testDocument.getWords.map(_.toLowerCase)
   }
 
   //calculate score of test document
-  def getTestScores = {
+  def testScores = {
     val priors = this.priorProbabilities
     val concatenizedDocs = this.makeDocumentsConcatenized
     val tokenizedTestDoc = this.testDocumentTokenize
@@ -85,14 +82,14 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextD
       (
         individualClass,                                                                          //class name
         log(priors(individualClass)) + tokenizedTestDoc.map(word =>                               //for each word
-          conditionalProbs._3.getOrElse(word, conditionalProbs._2)).map(number =>                   //lookup conditional probability
-          log(number)).sum                                                                          //take the log and sum
+          conditionalProbs._3.getOrElse(word, conditionalProbs._2)).map(number =>                   //lookup conditional probability or use smoothing value
+          log(number.toDouble)).sum                                                                          //take the log and sum
       )
     }
   }
 
-  def determineArgMax = {
-    val sorted = this.getTestScores.sortBy(_._2).reverse
+  def argMax = {
+    val sorted = this.testScores.sortBy(_._2).reverse
     sorted.head._1
   }
 
