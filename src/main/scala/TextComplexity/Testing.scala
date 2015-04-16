@@ -38,6 +38,7 @@ object Testing {
 
   //testing inside class
   val discourseDoc = makeDocument("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/0203ES_CowgirlKate.txt", processorDiscourse)
+  val discourseDoc2 = makeDocument("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/1112JL_Namesake.txt", processorDiscourse)
 
   val doc = makeDocument("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/0001AL_OwlAndMoon.txt", processor)
 

@@ -17,6 +17,8 @@ import scala.collection.mutable
  * Created by mcapizzi on 4/5/15.
  */
 
+//TODO make sure all stats tuples are turned to maps for easy access
+
 //each item in vector is a full paragraph
 class TextDocument(val text: Vector[String], val processor: CoreNLPProcessor, val document: Vector[edu.arizona.sista.processors.Document], val author: String, val title: String, val chapter: String, val gradeLevel: String) {
 
