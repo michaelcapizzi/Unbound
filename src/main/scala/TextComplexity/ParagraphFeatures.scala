@@ -69,9 +69,9 @@ class ParagraphFeatures(textDocument: TextDocument) {
         direction -> directionFreq.getPct(direction)
       ).distinct.toMap                                                        //make map
 
-    val relationCounts = tuple.map(_._2).flatten.map(relation =>            //count of each relation
-        relation -> relationFreq.getCount(relation)
-      ).distinct
+    val relationTypes = tuple.map(_._2).flatten.map(relation =>            //count of each relation
+        relation -> relationFreq.getCount(relation) / tuple.map(_._2).flatten.length.toDouble   //percent of each relation type
+      ).distinct.toMap
 
     Map(
       "minimum number of relations per sentence" -> relationCountStats.getMin,
@@ -82,8 +82,26 @@ class ParagraphFeatures(textDocument: TextDocument) {
       "maximum number of relations per sentence" -> relationCountStats.getMax,
       "percentage of L->R relations in document" -> directionRatio("(LeftToRight)"),
       "percentage of R->L relations in document" -> directionRatio("(RightToLeft)"),
-      "percentage of directionless relations in document" -> directionRatio("n/a")/*,
-      "number of 'attribution' relations normalized over paragraph size" */
+      "percentage of directionless relations in document" -> directionRatio("n/a"),
+      "percent of 'span' relations normalized over paragraph size" -> relationTypes.getOrElse("span", 0.0),
+      "percent of 'comparison' relations in text" -> relationTypes.getOrElse("comparison", 0.0),
+      "percent of 'background' relations in text" -> relationTypes.getOrElse("background", 0.0),
+      "percent of 'textual-organization' relations in text" -> relationTypes.getOrElse("textual-organization", 0.0),
+      "percent of 'joint' relations in text" -> relationTypes.getOrElse("joint", 0.0),
+      "percent of 'attribution' relations in text" -> relationTypes.getOrElse("attribution", 0.0),
+      "percent of 'enablement' relations in text" -> relationTypes.getOrElse("enablement", 0.0),
+      "percent of 'condition' relations in text" -> relationTypes.getOrElse("condition", 0.0),
+      "percent of 'temporal' relations in text" -> relationTypes.getOrElse("temporal", 0.0),
+      "percent of 'explanation' relations in text" -> relationTypes.getOrElse("explanation", 0.0),
+      "percent of 'cause' relations in text" -> relationTypes.getOrElse("cause", 0.0),
+      "percent of 'contrast' relations in text" -> relationTypes.getOrElse("contrast", 0.0),
+      "percent of 'evaluation' relations in text" -> relationTypes.getOrElse("evaluation", 0.0),
+      "percent of 'topic-change' relations in text" -> relationTypes.getOrElse("topic-change", 0.0),
+      "percent of 'same-unit' relations in text" -> relationTypes.getOrElse("same-unit", 0.0),
+      "percent of 'manner-means' relations in text" -> relationTypes.getOrElse("manner-means", 0.0),
+      "percent of 'summary' relations in text" -> relationTypes.getOrElse("summary", 0.0),
+      "percent of 'topic-comment' relations in text" -> relationTypes.getOrElse("topic-comment", 0.0),
+      "percent of 'elaboration' relations in text" -> relationTypes.getOrElse("elaboration", 0.0)
     )
 
   }
