@@ -1,6 +1,10 @@
 package TextComplexity
 
+import java.io.{BufferedReader, FileReader}
+
+import edu.arizona.sista.processors.{DocumentSerializer, Document}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
+import scala.StringBuilder
 import scala.collection.mutable
 import scala.io.Source
 
@@ -52,6 +56,41 @@ object Importing {
     val title = getTitleChapter(filePath)._1
     val chapter = getTitleChapter(filePath)._2
     val gradeLevel = getGradeLevel(filePath)
+    new TextDocument(text, processor, document, author, title, chapter, gradeLevel)
+  }
+
+  def importSerial(shortAnnotatedFilePath: String): Vector[Document] = {
+    val serial = new DocumentSerializer
+    val buffer = new BufferedReader(new FileReader("/home/mcapizzi/Github/Unbound/src/main/resources/annotatedText/" + shortAnnotatedFilePath))
+    var line = buffer.readLine
+    val stringBuffer = new StringBuilder
+    val docBuffer = collection.mutable.Buffer[String]()
+
+    while (line != null) {
+      if (line == "EOD") {
+        //println("END OF DOC")
+        stringBuffer.append(line)
+        docBuffer += stringBuffer.toString
+        //line = buffer.readLine
+        stringBuffer.clear
+        line = buffer.readLine
+      } else {
+        //println(line)
+        stringBuffer.append(line + "\n")
+        line = buffer.readLine
+      }
+    }
+    docBuffer.map(paragraph =>
+      serial.load(paragraph)).toVector
+  }
+
+  def makeDocumentFromSerial(shortAnnotatedFilePath: String, shortOriginalFilePath: String, processor: CoreNLPProcessor): TextDocument = {
+    val document = importSerial(shortAnnotatedFilePath)
+    val text = document.map(_.sentences.map(_.words.toVector).flatten.mkString(" "))
+    val author = getAuthor("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/" + shortOriginalFilePath)
+    val title = getTitleChapter("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/" + shortOriginalFilePath)._1
+    val chapter = getTitleChapter("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/" + shortOriginalFilePath)._2
+    val gradeLevel = getGradeLevel("/home/mcapizzi/Github/Unbound/src/main/resources/rawText/" + shortOriginalFilePath)
     new TextDocument(text, processor, document, author, title, chapter, gradeLevel)
   }
 

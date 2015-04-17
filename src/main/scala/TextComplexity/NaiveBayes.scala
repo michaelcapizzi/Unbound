@@ -8,6 +8,8 @@ import scala.math._
  */
 class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextDocument, val stopWords: Vector[String], countFrequencyThreshold: Int, documentFrequencyThreshold: Int, mutualInformationThreshold: Int) {
 
+  //TODO make testDocument a vector and adjust methods
+
   //TODO implement feature selection parameters
 
   //total # of documents

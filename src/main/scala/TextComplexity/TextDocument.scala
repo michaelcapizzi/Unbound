@@ -1,7 +1,8 @@
 package TextComplexity
 
-import java.io.{ByteArrayInputStream, InputStreamReader, InputStream}
+import java.io._
 import edu.arizona.sista.learning.Datum
+import edu.arizona.sista.processors.DocumentSerializer
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import edu.arizona.sista.struct.Counter
 import edu.stanford.nlp.trees.tregex.TregexPattern
@@ -32,13 +33,6 @@ class TextDocument(val text: Vector[String], val processor: CoreNLPProcessor, va
     document.map(processor.annotate)
   }
 
-  //TODO build method to retrieve from file -- how to loop to handle multiple docs (e.g. paragraphs) in one text file?
-  def retrieveAnnotation = {
-    //val buff = new BufferedReader(new FileReader([file location]
-    //val serial = new DocumentSerializer()
-    //serial.load(buff)
-
-  }
 
   ////////////////////////// for normalizing //////////////////////////
 
