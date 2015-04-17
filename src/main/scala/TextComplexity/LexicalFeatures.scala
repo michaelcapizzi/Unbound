@@ -109,10 +109,10 @@ class LexicalFeatures(textDocument: TextDocument) {
       "number of tokens present in database normalized over non-proper noun word count" -> concretenessDouble.length.toDouble / textDocument.wordCountMinusProperNouns,
       "number of tokens not present in database normalized over non-proper noun word count" -> removed / textDocument.wordCountMinusProperNouns,
       "minimum concreteness score present in text" -> stat.getMin,
-      "25th %ile concreteness" -> stat.getPercentile(25),
-      "mean concreteness" -> stat.getMean,
-      "median concreteness" -> stat.getPercentile(50),
-      "75th %ile concreteness" -> stat.getPercentile(75),
+      "25th %ile concreteness score present in text" -> stat.getPercentile(25),
+      "mean concreteness score present in text" -> stat.getMean,
+      "median concreteness score present in text" -> stat.getPercentile(50),
+      "75th %ile concreteness score present in text" -> stat.getPercentile(75),
       //"maximum concreteness score present in text" -> stat.getMax,             //only 280 items = 5; too subjective of a list to use as measure?
       "concreteness score of most used noun" -> concretenessDouble.toMap.getOrElse(this.mostFrequentWords._1._2, 0.toDouble),
       "concreteness score of most used adjective" -> concretenessDouble.toMap.getOrElse(this.mostFrequentWords._2._2, 0.toDouble),
@@ -120,6 +120,25 @@ class LexicalFeatures(textDocument: TextDocument) {
       )
   }
 
+  def makeLexicalFeatureVector = {
+    Vector(
+      (textDocument.title, textDocument.title),
+      (textDocument.gradeLevel, textDocument.title),
+      ("number of distinct conjunctions", this.countDistinctPOS("CC.*")),
+      ("% of distinct nouns in all words", this.countDistinctPOS("NN.*")),
+      ("% of distinct verbs in all words", this.countDistinctPOS("VB.*")),
+      ("% of distinct adjectives in all words", this.countDistinctPOS("JJ.*")),
+      ("% of tokens not present in concreteness", this.wordConcretenessStats("number of tokens not present in database normalized over non-proper noun word count")),
+      ("minimum concreteness score present in text", this.wordConcretenessStats("minimum concreteness score present in text")),
+      ("25th %ile concreteness score present in text", this.wordConcretenessStats("25th %ile concreteness score present in text")),
+      ("mean concreteness score present in text", this.wordConcretenessStats("mean concreteness score present in text")),
+      ("median concreteness score present in text", this.wordConcretenessStats("median concreteness score present in text")),
+      ("75th %ile concreteness score present in text", this.wordConcretenessStats("75th %ile concreteness score present in text")),
+      ("concreteness score of most used noun", this.wordConcretenessStats("concreteness score of most used noun")),
+      ("concreteness score of most used verb", this.wordConcretenessStats("concreteness score of most used verb")),
+      ("concreteness score of most used adjective", this.wordConcretenessStats("concreteness score of most used adjective"))
+    )
+  }
 
 
 }

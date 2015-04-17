@@ -6,9 +6,7 @@ import scala.math._
 /**
  * Created by mcapizzi on 4/15/15.
  */
-class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextDocument, val stopWords: Vector[String], countFrequencyThreshold: Int, documentFrequencyThreshold: Int, mutualInformationThreshold: Int) {
-
-  //TODO make testDocument a vector and adjust methods
+class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vector[TextDocument], val stopWords: Vector[String], countFrequencyThreshold: Int, documentFrequencyThreshold: Int, mutualInformationThreshold: Int) {
 
   //TODO implement feature selection parameters
 
@@ -73,7 +71,7 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextD
 
   //tokenize test document
   def testDocumentTokenize = {
-    testDocument.getWords.map(_.toLowerCase)
+    testDocument.map(_.getWords.map(_.toLowerCase))
   }
 
   //calculate score of test document
@@ -81,20 +79,24 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: TextD
     val priors = this.priorProbabilities
     val concatenizedDocs = this.makeDocumentsConcatenized
     val tokenizedTestDoc = this.testDocumentTokenize
-    for (individualClass <- this.possibleClasses) yield {                                       //for each class
-      val conditionalProbs = this.conditionalProbabilities.find(_._1 == individualClass).get
-      (
-        individualClass,                                                                          //class name
-        log(priors(individualClass)) + tokenizedTestDoc.map(word =>                               //for each word
-          conditionalProbs._3.getOrElse(word, conditionalProbs._2)).map(number =>                   //lookup conditional probability or use smoothing value
-          log(number.toDouble)).sum                                                                          //take the log and sum
-      )
+    for (testDoc <- tokenizedTestDoc) yield {                                                     //for every test document
+      for (individualClass <- this.possibleClasses) yield {                                         //for each class
+        val conditionalProbs = this.conditionalProbabilities.find(_._1 == individualClass).get
+        (
+          individualClass,                                                                          //class name
+          log(priors(individualClass)) + testDoc.map(word =>                                 //for each word
+            conditionalProbs._3.getOrElse(word, conditionalProbs._2)).map(number =>                     //lookup conditional probability or use smoothing value
+            log(number)).sum                                                                            //take the log and sum
+          )
+      }
     }
   }
 
   def argMax = {
-    val sorted = this.testScores.sortBy(_._2).reverse
-    sorted.head._1
+    for (testDoc <- this.testScores) yield {
+      val sorted = testDoc.sortBy(_._2).reverse
+      sorted.head._1
+    }
   }
 
 

@@ -48,7 +48,6 @@ class ParagraphFeatures(textDocument: TextDocument) {
   }
 
 
-  //TODO add counts for each relation type
   def discourseRelationsStats = {
     val paragraphLengths = this.getParagraphLengths
     val relations = this.getDiscourseRelations.map(_.map(_._1))
@@ -103,9 +102,49 @@ class ParagraphFeatures(textDocument: TextDocument) {
       "percent of 'topic-comment' relations in text" -> relationTypes.getOrElse("topic-comment", 0.0),
       "percent of 'elaboration' relations in text" -> relationTypes.getOrElse("elaboration", 0.0)
     )
-
   }
+
   //count empty Arrays --> indicates no relations
-  //count relation types and directions
+
+  def makeParagraphFeatureVector = {
+    Vector(
+      (textDocument.title, textDocument.title),
+      (textDocument.gradeLevel, textDocument.gradeLevel),
+      ("minimum paragraph length", this.paragraphLengthStats("minimum paragraph length")),
+      ("25th %ile paragraph length", this.paragraphLengthStats("25th %ile paragraph length")),
+      ("mean paragraph length", this.paragraphLengthStats("mean paragraph length")),
+      ("median paragraph length", this.paragraphLengthStats("median paragraph length")),
+      ("75th %ile paragraph length", this.paragraphLengthStats("75th %ile paragraph length")),
+      ("maximum paragraph length", this.paragraphLengthStats("maximum paragraph length")),
+      ("minimum number of relations per sentence", this.discourseRelationsStats("minimum number of relations per sentence")),
+      ("25th %ile number of relations per sentence", this.discourseRelationsStats("25th %ile number of relations per sentence")),
+      ("mean number of relations per sentence", this.discourseRelationsStats("mean number of relations per sentence")),
+      ("median number of relations per sentence", this.discourseRelationsStats("median number of relations per sentence")),
+      ("75th %ile number of relations per sentence", this.discourseRelationsStats("75th %ile number of relations per sentence")),
+      ("maximum number of relations per sentence", this.discourseRelationsStats("maximum number of relations per sentence")),
+      ("percentage of L->R relations in document", this.discourseRelationsStats("percentage of L->R relations in document")),
+      ("percentage of R->L relations in document", this.discourseRelationsStats("percentage of R->L relations in document")),
+      ("percentage of directionless relations in document", this.discourseRelationsStats("percentage of directionless relations in document")),
+      ("percent of 'span' relations normalized over paragraph size", this.discourseRelationsStats("percent of 'span' relations normalized over paragraph size")),
+      ("percent of 'comparison' relations in text", this.discourseRelationsStats("percent of 'comparison' relations in text")),
+      ("percent of 'background' relations in text", this.discourseRelationsStats("percent of 'background' relations in text")),
+      ("percent of 'textual-organization' relations in text", this.discourseRelationsStats("percent of 'textual-organization' relations in text")),
+      ("percent of 'joint' relations in text", this.discourseRelationsStats("percent of 'joint' relations in text")),
+      ("percent of 'attribution' relations in text", this.discourseRelationsStats("percent of 'attribution' relations in text")),
+      ("percent of 'enablement' relations in text", this.discourseRelationsStats("percent of 'enablement' relations in text")),
+      ("percent of 'condition' relations in text", this.discourseRelationsStats("percent of 'condition' relations in text")),
+      ("percent of 'temporal' relations in text", this.discourseRelationsStats("percent of 'temporal' relations in text")),
+      ("percent of 'explanation' relations in text", this.discourseRelationsStats("percent of 'explanation' relations in text")),
+      ("percent of 'cause' relations in text", this.discourseRelationsStats("percent of 'cause' relations in text")),
+      ("percent of 'contrast' relations in text", this.discourseRelationsStats("percent of 'contrast' relations in text")),
+      ("percent of 'evaluation' relations in text", this.discourseRelationsStats("percent of 'evaluation' relations in text")),
+      ("percent of 'topic-change' relations in text", this.discourseRelationsStats("percent of 'topic-change' relations in text")),
+      ("percent of 'same-unit' relations in text", this.discourseRelationsStats("percent of 'same-unit' relations in text")),
+      ("percent of 'manner-means' relations in text", this.discourseRelationsStats("percent of 'manner-means' relations in text")),
+      ("percent of 'summary' relations in text", this.discourseRelationsStats("percent of 'summary' relations in text")),
+      ("percent of 'topic-comment' relations in text", this.discourseRelationsStats("percent of 'topic-comment' relations in text")),
+      ("percent of 'elaboration' relations in text", this.discourseRelationsStats("percent of 'elaboration' relations in text"))
+    )
+  }
 
 }

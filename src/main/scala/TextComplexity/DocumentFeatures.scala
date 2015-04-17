@@ -52,4 +52,6 @@ class DocumentFeatures(textDocument: TextDocument) {
   def numberOfCharacters = {
     this.getCharacters.length.toDouble / textDocument.sentenceSize                  //number of characters normalized over # of sentences
   }
+
+
 }
