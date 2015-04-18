@@ -6,7 +6,7 @@ Features Collected
 
 Lexical Features | Syntactic Features | Paragraph Features
 ---|---|---
-\# of distinct conjunctions used | \**average # of conjunctions per sentence | length of paragraphs
+\# of distinct conjunctions used | \**average # of conjunctions per sentence | /**length of paragraphs
 % of distinct nouns used | \**sentence length in text | \# of relations per paragraph
 % of distinct verbs used | \**tree size in text | % of relations in each direction
 % of distinct adjectives used | \**tree depth in text | % of each relation type
