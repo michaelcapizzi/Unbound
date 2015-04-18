@@ -4,7 +4,6 @@ import java.io._
 import Importing._
 import Serializing._
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
-
 import scala.io.Source
 
 /**
@@ -19,10 +18,11 @@ class MachineLearning(
                        val featureVectorFileFolder: String = ""
                        ) {
 
+  //TODO test all methods
+
   val rawFile = new File(rawTextFileFolder)
   val annotatedFile = new File(annotatedTextFileFolder)
   val featureVectorFile = new File(featureVectorFileFolder)
-
 
   //load raw files from folder and make TextDocument for each
   def importRawMakeDocuments = {
@@ -46,13 +46,13 @@ class MachineLearning(
         val lexical = new LexicalFeatures(item)
         val syntactic = new SyntacticFeatures(item)
         val paragraph = new ParagraphFeatures(item)
-        (lexical, syntactic, paragraph)
+        (lexical.makeLexicalFeatureVector, syntactic.makeSyntacticFeatureVector, paragraph.makeParagraphFeatureVector)
       }
     }
   }
 
   //make features from annotated import
-  def makeAnnotatedFeatureClasses = {
+  def makeAnnotatedFeatureVectors = {
     for (item <- this.importAnnotatedMakeDocuments) yield {
       for (featureClass <- featuresToInclude) yield {
         val lexical = new LexicalFeatures(item)
@@ -81,15 +81,13 @@ class MachineLearning(
   def leaveOneOut = {
     //take SVM light file
       //generate all possible combinations
+    //HOW TO HANDLE parameter selections?
   }
 
-
-      //concatenate features together
-      //export to resources/featureVectors
-        //with a folder and name
-      //do the ML
-      //create a evaluationmetric class instance
-
+  def fullTrain = {
+    //take SVM light file as is
+    //HOW TO HANDLE paramter selections?
+  }
 
 
 }
