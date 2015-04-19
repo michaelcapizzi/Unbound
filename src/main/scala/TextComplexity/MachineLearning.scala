@@ -4,6 +4,8 @@ import java.io._
 import Importing._
 import Serializing._
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
+import scala.collection.mutable.Buffer
+import scala.collection.parallel.mutable
 import scala.io.Source
 
 /**
@@ -58,21 +60,35 @@ class MachineLearning(
         val lexical = new LexicalFeatures(item)
         val syntactic = new SyntacticFeatures(item)
         val paragraph = new ParagraphFeatures(item)
-        (lexical.makeLexicalFeatureVector, syntactic.makeSyntacticFeatureVector, paragraph.makeParagraphFeatureVector)
       }
+      Map("lexical" -> lexical.makeLexicalFeatureVector, "syntactic" -> syntactic.makeSyntacticFeatureVector, "paragraph" -> paragraph.makeParagraphFeatureVector)
     }
   }
 
-  //concatenate features from class parameter
+  /*//concatenate features from class parameter
     //build into SVM light format
-  def buildFinalFeatureVector(export: Boolean) {
-    //concatenate
-    //build into one SVM light file with all files
-    if (export) {
-      //printwriter to file folder labeled in Vector parameter
-        //make a folder named parameters
+  def buildFinalFeatureVector {
+    val allFeatureVectors = this.makeAnnotatedFeatureVectors
+    val featureBuffer = collection.mutable.Buffer[(String, Double)]()
+
+    for (item <- allFeatureVectors) yield {
+      if (featuresToInclude.contains("lexical")) {
+        featureBuffer += item("lexical")
+      } else if (featuresToInclude.contains("lexical") && featuresToInclude.contains("syntactic")) {
+        featureBuffer += item("lexical")
+        featureBuffer += item("syntactic")
+      } else if (featuresToInclude.contains("lexical") && featuresToInclude.contains("syntactic") && featuresToInclude.contains("paragraph"))
+        featureBuffer += item("lexical")
+        featureBuffer += item("syntactic")
+        featureBuffer += item("paragraph")
     }
-  }
+    //concatenate based on parameter
+    //build into one SVM light file with all files
+      val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileFolder))
+      featureVector.map(line <- pw.println(line))
+      pw.close
+      featureVector
+  }*/
 
   def importFinalFeatureVector = {
     //featureVectorFile.listFiles.map(item => )
