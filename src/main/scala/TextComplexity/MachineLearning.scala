@@ -11,13 +11,15 @@ import scala.io.Source
 /**
  * Created by mcapizzi on 4/15/15.
  */
+
 class MachineLearning(
                        val annotatedTextFileFolder: String,         //required
                        val processor: CoreNLPProcessor,             //required
                        val featuresToInclude: Vector[String],       //required
                        val modelsToUse: Vector[String],             //required
                        val rawTextFileFolder: String = "",
-                       val featureVectorFileFolder: String = ""
+                       val featureVectorFileFolder: String = "",
+                       val textToTestFilePath: String = ""
                        ) {
 
   //TODO test all methods
@@ -41,6 +43,10 @@ class MachineLearning(
       makeDocumentFromSerial(item._1.getCanonicalPath, item._2.getCanonicalPath, processor)).toVector
   }
 
+  def importTestRawMakeDocuments = {
+    //
+  }
+
   //make features from Raw import
   def makeRawFeatureClasses = {
     for (item <- this.importRawMakeDocuments) yield {
@@ -56,39 +62,41 @@ class MachineLearning(
   //make features from annotated import
   def makeAnnotatedFeatureVectors = {
     for (item <- this.importAnnotatedMakeDocuments) yield {
-      for (featureClass <- featuresToInclude) yield {
         val lexical = new LexicalFeatures(item)
         val syntactic = new SyntacticFeatures(item)
         val paragraph = new ParagraphFeatures(item)
-      }
-      Map("lexical" -> lexical.makeLexicalFeatureVector, "syntactic" -> syntactic.makeSyntacticFeatureVector, "paragraph" -> paragraph.makeParagraphFeatureVector)
+        (lexical.makeLexicalFeatureVector, syntactic.makeSyntacticFeatureVector, paragraph.makeParagraphFeatureVector)
     }
   }
 
-  /*//concatenate features from class parameter
+  def makeTestFeatureClasses = {
+    //
+  }
+
+  //concatenate features from class parameter
     //build into SVM light format
-  def buildFinalFeatureVector {
+  def buildFinalFeatureVector = {
     val allFeatureVectors = this.makeAnnotatedFeatureVectors
-    val featureBuffer = collection.mutable.Buffer[(String, Double)]()
+    val featureBuffer = collection.mutable.Buffer[Vector[(String, Any)]]()
 
     for (item <- allFeatureVectors) yield {
       if (featuresToInclude.contains("lexical")) {
-        featureBuffer += item("lexical")
+        featureBuffer += item._1
       } else if (featuresToInclude.contains("lexical") && featuresToInclude.contains("syntactic")) {
-        featureBuffer += item("lexical")
-        featureBuffer += item("syntactic")
+        featureBuffer += item._2
+        featureBuffer += item._3
       } else if (featuresToInclude.contains("lexical") && featuresToInclude.contains("syntactic") && featuresToInclude.contains("paragraph"))
-        featureBuffer += item("lexical")
-        featureBuffer += item("syntactic")
-        featureBuffer += item("paragraph")
+        featureBuffer += item._1
+        featureBuffer += item._2
+        featureBuffer += item._3
     }
     //concatenate based on parameter
     //build into one SVM light file with all files
       val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileFolder))
-      featureVector.map(line <- pw.println(line))
+      featureBuffer.flatten.map(line => pw.println(line))
       pw.close
-      featureVector
-  }*/
+      featureBuffer.flatten
+  }
 
   def importFinalFeatureVector = {
     //featureVectorFile.listFiles.map(item => )
@@ -105,5 +113,8 @@ class MachineLearning(
     //HOW TO HANDLE paramter selections?
   }
 
+  def testOne = {
+    //
+  }
 
 }
