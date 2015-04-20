@@ -73,6 +73,7 @@ class MachineLearning(
     //
   }
 
+  //TODO fix - featureBuffer must have metaData
     //concatenate features from class parameter
     //build into SVM light format
   def buildFinalFeatureVector = {
@@ -81,37 +82,33 @@ class MachineLearning(
 
     for (item <- allFeatureVectors) yield {
       if (featuresToInclude == Vector("lexical")) {
-        featureBuffer += item._2
+        featureBuffer += (Vector(item._1) ++ item._2)
       } else if (featuresToInclude == Vector("syntactic")) {
-        featureBuffer += item._3
+        featureBuffer += Vector(item._1) ++ item._3
       } else if (featuresToInclude == Vector("paragraph")) {
-        featureBuffer += item._4
+        featureBuffer += Vector(item._1) ++ item._4
       } else if (featuresToInclude == Vector("lexical", "syntactic")) {
-        featureBuffer += item._2
-        featureBuffer += item._3.slice(2, item._2.length - 1)
+        featureBuffer += Vector(item._1) ++ item._2 ++ item._3.slice(2, item._2.length - 1)
       } else if (featuresToInclude == Vector("syntactic", "paragraph")) {
-        featureBuffer += item._3
-        featureBuffer += item._4.slice(2, item._2.length - 1)
+        featureBuffer += Vector(item._1) ++ item._3 ++ item._4.slice(2, item._2.length - 1)
       } else if (featuresToInclude == Vector("lexical", "paragraph")) {
-        featureBuffer += item._2
-        featureBuffer += item._4.slice(2, item._2.length - 1)
+        featureBuffer += item._2 ++ item._4.slice(2, item._2.length - 1)
       } else if (featuresToInclude == Vector("lexical", "syntactic", "paragraph")) {
-        featureBuffer += item._2
-        featureBuffer += item._3.slice(2, item._2.length - 1)
-        featureBuffer += item._4.slice(2, item._2.length - 1)
+        featureBuffer += Vector(item._1) ++ item._2 ++ item._3.slice(2, item._2.length - 1) ++ item._4.slice(2, item._2.length - 1)
       }
     }
-    val svmFile = toSVM(featureBuffer.flatten)
+    val svmFile = toSVM(featureBuffer)
     //build into one SVM light file with all files
       val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileFolder))
       svmFile.map(line => pw.println(line))
       pw.close
 
-      def toSVM(buffer: collection.mutable.Buffer[(String, Any)]) = {
+    //TODO fix
+      def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Any)]]) = {
         for (row <- buffer) yield {
-          buffer.head._2 + " " + {
-            (for (i <- 1 to buffer.length - 3) yield {
-              i.toString + ":" + buffer(i).toString).mkString(" ")
+          row.head._2 + " " + {
+            (for (i <- 1 to row.length - 3) yield {
+              i.toString + ":" + row(i).toString).mkString(" ")
             })
           } + "#" + buffer.head._1
         }
