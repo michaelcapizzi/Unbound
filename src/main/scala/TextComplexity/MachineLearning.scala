@@ -65,7 +65,12 @@ class MachineLearning(
       val lexical = new LexicalFeatures(item)
       val syntactic = new SyntacticFeatures(item)
       val paragraph = new ParagraphFeatures(item)
-      (metaData, lexical.makeLexicalFeatureVector, syntactic.makeSyntacticFeatureVector, paragraph.makeParagraphFeatureVector)
+      (
+        metaData,
+        lexical.makeLexicalFeatureVector,
+        syntactic.makeSyntacticFeatureVector,
+        paragraph.makeParagraphFeatureVector
+      )
     }
   }
 
