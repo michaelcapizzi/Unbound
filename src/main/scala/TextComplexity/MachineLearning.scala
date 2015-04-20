@@ -50,22 +50,22 @@ class MachineLearning(
   //make features from Raw import
   def makeRawFeatureClasses = {
     for (item <- this.importRawMakeDocuments) yield {
-      for (featureClass <- featuresToInclude) yield {
-        val lexical = new LexicalFeatures(item)
-        val syntactic = new SyntacticFeatures(item)
-        val paragraph = new ParagraphFeatures(item)
-        (lexical.makeLexicalFeatureVector, syntactic.makeSyntacticFeatureVector, paragraph.makeParagraphFeatureVector)
-      }
+      val metaData = (item.title, item.gradeLevel)
+      val lexical = new LexicalFeatures(item)
+      val syntactic = new SyntacticFeatures(item)
+      val paragraph = new ParagraphFeatures(item)
+      (metaData, lexical.makeLexicalFeatureVector, syntactic.makeSyntacticFeatureVector, paragraph.makeParagraphFeatureVector)
     }
   }
 
   //make features from annotated import
   def makeAnnotatedFeatureVectors = {
     for (item <- this.importAnnotatedMakeDocuments) yield {
-        val lexical = new LexicalFeatures(item)
-        val syntactic = new SyntacticFeatures(item)
-        val paragraph = new ParagraphFeatures(item)
-        (lexical.makeLexicalFeatureVector, syntactic.makeSyntacticFeatureVector, paragraph.makeParagraphFeatureVector)
+      val metaData = (item.title, item.gradeLevel)
+      val lexical = new LexicalFeatures(item)
+      val syntactic = new SyntacticFeatures(item)
+      val paragraph = new ParagraphFeatures(item)
+      (metaData, lexical.makeLexicalFeatureVector, syntactic.makeSyntacticFeatureVector, paragraph.makeParagraphFeatureVector)
     }
   }
 
@@ -73,29 +73,49 @@ class MachineLearning(
     //
   }
 
-  //concatenate features from class parameter
+    //concatenate features from class parameter
     //build into SVM light format
   def buildFinalFeatureVector = {
     val allFeatureVectors = this.makeAnnotatedFeatureVectors
     val featureBuffer = collection.mutable.Buffer[Vector[(String, Any)]]()
 
     for (item <- allFeatureVectors) yield {
-      if (featuresToInclude.contains("lexical")) {
-        featureBuffer += item._1
-      } else if (featuresToInclude.contains("lexical") && featuresToInclude.contains("syntactic")) {
+      if (featuresToInclude == Vector("lexical")) {
         featureBuffer += item._2
+      } else if (featuresToInclude == Vector("syntactic")) {
         featureBuffer += item._3
-      } else if (featuresToInclude.contains("lexical") && featuresToInclude.contains("syntactic") && featuresToInclude.contains("paragraph"))
-        featureBuffer += item._1
+      } else if (featuresToInclude == Vector("paragraph")) {
+        featureBuffer += item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic")) {
         featureBuffer += item._2
+        featureBuffer += item._3.slice(2, item._2.length - 1)
+      } else if (featuresToInclude == Vector("syntactic", "paragraph")) {
         featureBuffer += item._3
+        featureBuffer += item._4.slice(2, item._2.length - 1)
+      } else if (featuresToInclude == Vector("lexical", "paragraph")) {
+        featureBuffer += item._2
+        featureBuffer += item._4.slice(2, item._2.length - 1)
+      } else if (featuresToInclude == Vector("lexical", "syntactic", "paragraph")) {
+        featureBuffer += item._2
+        featureBuffer += item._3.slice(2, item._2.length - 1)
+        featureBuffer += item._4.slice(2, item._2.length - 1)
+      }
     }
-    //concatenate based on parameter
+    val svmFile = toSVM(featureBuffer.flatten)
     //build into one SVM light file with all files
       val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileFolder))
-      featureBuffer.flatten.map(line => pw.println(line))
+      svmFile.map(line => pw.println(line))
       pw.close
-      featureBuffer.flatten
+
+      def toSVM(buffer: collection.mutable.Buffer[(String, Any)]) = {
+        for (row <- buffer) yield {
+          buffer.head._2 + " " + {
+            (for (i <- 1 to buffer.length - 3) yield {
+              i.toString + ":" + buffer(i).toString).mkString(" ")
+            })
+          } + "#" + buffer.head._1
+        }
+      }
   }
 
   def importFinalFeatureVector = {
@@ -110,7 +130,7 @@ class MachineLearning(
 
   def fullTrain = {
     //take SVM light file as is
-    //HOW TO HANDLE paramter selections?
+    //HOW TO HANDLE parameter selections?
   }
 
   def testOne = {
