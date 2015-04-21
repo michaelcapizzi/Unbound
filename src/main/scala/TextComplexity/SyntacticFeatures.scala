@@ -14,7 +14,7 @@ import scala.collection.mutable._
 /**
  * Created by mcapizzi on 4/7/15.
  */
-class SyntacticFeatures(textDocument: TextDocument) {
+class SyntacticFeatures(val textDocument: TextDocument) {
 
   //TODO test wordSimilarity on longer text
       //include print statements?
@@ -315,6 +315,62 @@ class SyntacticFeatures(textDocument: TextDocument) {
 
   def makeSyntacticFeatureVector = {
     Vector(
+        (textDocument.title, textDocument.title),
+        (textDocument.gradeLevel, textDocument.gradeLevel),
+        ("average number of conjunctions used per sentence", this.conjunctionFrequency),
+        ("minimum sentence length", this.sentenceLengthStats("sentence length minimum")),
+        ("25th %ile sentence length", this.sentenceLengthStats("25th %ile sentence length")),
+        ("mean sentence length", this.sentenceLengthStats("sentence length mean")),
+        ("median sentence length", this.sentenceLengthStats("sentence length median")),
+        ("75th %ile sentence length", this.sentenceLengthStats("75th %ile sentence length")),
+        ("maximum sentence length", this.sentenceLengthStats("sentence length maximum")),
+        ("minimum tree size", this.treeSizeStats("minimum tree size")),
+        ("25th %ile tree size", this.treeSizeStats("25th %ile tree size")),
+        ("mean tree size", this.treeSizeStats("mean tree size")),
+        ("median tree size", this.treeSizeStats("median tree size")),
+        ("75th %ile tree size", this.treeSizeStats("75th %ile tree size")),
+        ("maximum tree size", this.treeSizeStats("maximum tree size")),
+        ("minimum tree depth", this.treeDepthStats("minimum tree depth")),
+        ("25th %ile tree depth", this.treeDepthStats("25th %ile tree depth")),
+        ("mean tree depth", this.treeDepthStats("mean tree depth")),
+        ("median tree depth", this.treeDepthStats("median tree depth")),
+        ("75th %ile tree depth", this.treeDepthStats("75th %ile tree depth")),
+        ("maximum tree depth", this.treeDepthStats("maximum tree depth")),
+        ("minimum distance to verb", this.distanceToVerbStats("minimum distance to verb")),
+        ("25th %ile distance to verb", this.distanceToVerbStats("25th %ile distance to verb")),
+        ("mean distance to verb", this.distanceToVerbStats("mean distance to verb")),
+        ("median distance to verb", this.distanceToVerbStats("median distance to verb")),
+        ("75th %ile distance to verb", this.distanceToVerbStats("75th %ile distance to verb")),
+        ("maximum distance to verb", this.distanceToVerbStats("maximum distance to verb")),
+        ("minimum number of constituents in a sentence", this.constituentCountStats("minimum number of constituents in a sentence")),
+        ("25th %ile number of constituents in a sentence", this.constituentCountStats("25th %ile number of constituents in a sentence")),
+        ("mean number of constituents in a sentence", this.constituentCountStats("mean number of constituents in a sentence")),
+        ("median number of constituents in a sentence", this.constituentCountStats("median number of constituents in a sentence")),
+        ("75th %ile number of constituents in a sentence", this.constituentCountStats("75th %ile number of constituents in a sentence")),
+        ("maximum number of constituents in a sentence", this.constituentCountStats("maximum number of constituents in a sentence")),
+        ("minimum constituent length", this.constituentLengthStats("constituent length minimum")),
+        ("25th %ile constituent length", this.constituentLengthStats("25th %ile constituent length")),
+        ("mean constituent length", this.constituentLengthStats("constituent length mean")),
+        ("median constituent length", this.constituentLengthStats("constituent length median")),
+        ("75th %ile constituent length", this.constituentLengthStats("75th %ile constituent length")),
+        ("maximum constituent length", this.constituentLengthStats("constituent length maximum")),
+        ("minimum word similarity sentence score", this.wordSimilaritySentenceScoreStats("minimum similarity sentence score")),
+        ("25th %ile word similarity sentence score", this.wordSimilaritySentenceScoreStats("25th %ile similarity sentence score")),
+        ("mean word similarity sentence score", this.wordSimilaritySentenceScoreStats("mean similarity sentence score")),
+        ("median word similarity sentence score", this.wordSimilaritySentenceScoreStats("median similarity sentence score")),
+        ("75th %ile similarity sentence score", this.wordSimilaritySentenceScoreStats("75th %ile similarity sentence score")),
+        ("maximum similarity sentence score", this.wordSimilaritySentenceScoreStats("maximum similarity sentence score")),
+        ("average number of clauses per sentence", this.getSentenceComplexityScore),
+        ("% of simple sentences", this.sentenceStructureTypeStats("ratio of simple sentences")),
+        ("% of complex sentences", this.sentenceStructureTypeStats("ratio of complex sentences")),
+        ("% of compound sentences", this.sentenceStructureTypeStats("ratio of compound sentences")),
+        ("% of compound-complex sentences", this.sentenceStructureTypeStats("ratio of compound-complex sentences")),
+        ("% of fragments", this.sentenceStructureTypeStats("ratio of fragments"))
+      )
+  }
+
+  def makeSyntacticMinusSimilarityFeatureVector = {
+    Vector(
       (textDocument.title, textDocument.title),
       (textDocument.gradeLevel, textDocument.gradeLevel),
       ("average number of conjunctions used per sentence", this.conjunctionFrequency),
@@ -354,12 +410,6 @@ class SyntacticFeatures(textDocument: TextDocument) {
       ("median constituent length", this.constituentLengthStats("constituent length median")),
       ("75th %ile constituent length", this.constituentLengthStats("75th %ile constituent length")),
       ("maximum constituent length", this.constituentLengthStats("constituent length maximum")),
-      ("minimum word similarity sentence score", this.wordSimilaritySentenceScoreStats("minimum similarity sentence score")),
-      ("25th %ile word similarity sentence score", this.wordSimilaritySentenceScoreStats("25th %ile similarity sentence score")),
-      ("mean word similarity sentence score", this.wordSimilaritySentenceScoreStats("mean similarity sentence score")),
-      ("median word similarity sentence score", this.wordSimilaritySentenceScoreStats("median similarity sentence score")),
-      ("75th %ile similarity sentence score", this.wordSimilaritySentenceScoreStats("75th %ile similarity sentence score")),
-      ("maximum similarity sentence score", this.wordSimilaritySentenceScoreStats("maximum similarity sentence score")),
       ("average number of clauses per sentence", this.getSentenceComplexityScore),
       ("% of simple sentences", this.sentenceStructureTypeStats("ratio of simple sentences")),
       ("% of complex sentences", this.sentenceStructureTypeStats("ratio of complex sentences")),
@@ -369,6 +419,14 @@ class SyntacticFeatures(textDocument: TextDocument) {
     )
   }
 
-
-
+  def similarityFeatureVector = {
+    Vector(
+      ("minimum word similarity sentence score", this.wordSimilaritySentenceScoreStats("minimum similarity sentence score")),
+      ("25th %ile word similarity sentence score", this.wordSimilaritySentenceScoreStats("25th %ile similarity sentence score")),
+      ("mean word similarity sentence score", this.wordSimilaritySentenceScoreStats("mean similarity sentence score")),
+      ("median word similarity sentence score", this.wordSimilaritySentenceScoreStats("median similarity sentence score")),
+      ("75th %ile similarity sentence score", this.wordSimilaritySentenceScoreStats("75th %ile similarity sentence score")),
+      ("maximum similarity sentence score", this.wordSimilaritySentenceScoreStats("maximum similarity sentence score"))
+    )
+  }
 }

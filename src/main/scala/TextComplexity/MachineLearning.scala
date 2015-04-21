@@ -54,22 +54,27 @@ class MachineLearning(
       val lexical = new LexicalFeatures(item)
       val syntactic = new SyntacticFeatures(item)
       val paragraph = new ParagraphFeatures(item)
-      (metaData, lexical.makeLexicalFeatureVector, syntactic.makeSyntacticFeatureVector, paragraph.makeParagraphFeatureVector)
+      (
+        metaData,
+        lexical.makeLexicalFeatureVector.slice(2, lexical.makeLexicalFeatureVector.length - 1),             //without metadata
+        syntactic.makeSyntacticFeatureVector.slice(2, syntactic.makeSyntacticFeatureVector.length - 1),     //without metadata
+        paragraph.makeParagraphFeatureVector.slice(2, paragraph.makeParagraphFeatureVector.length - 1)      //without metadata
+      )
     }
   }
 
   //make features from annotated import
   def makeAnnotatedFeatureVectors = {
     for (item <- this.importAnnotatedMakeDocuments) yield {
-      val metaData = (item.title, item.gradeLevel)
+      val metaData = Vector((item.title, 0d), (item.gradeLevel, 0d))
       val lexical = new LexicalFeatures(item)
       val syntactic = new SyntacticFeatures(item)
       val paragraph = new ParagraphFeatures(item)
       (
         metaData,
-        lexical.makeLexicalFeatureVector,
-        syntactic.makeSyntacticFeatureVector,
-        paragraph.makeParagraphFeatureVector
+        lexical.makeLexicalFeatureVector.slice(2, lexical.makeLexicalFeatureVector.length - 1).asInstanceOf[Vector[(String, Double)]],             //without metadata
+        syntactic.makeSyntacticFeatureVector.slice(2, syntactic.makeSyntacticFeatureVector.length - 1).asInstanceOf[Vector[(String, Double)]],     //without metadata
+        paragraph.makeParagraphFeatureVector.slice(2, paragraph.makeParagraphFeatureVector.length - 1).asInstanceOf[Vector[(String, Double)]]      //without metadata
       )
     }
   }
@@ -78,28 +83,27 @@ class MachineLearning(
     //
   }
 
-  //TODO fix - featureBuffer must have metaData
     //concatenate features from class parameter
     //build into SVM light format
   def buildFinalFeatureVector = {
     val allFeatureVectors = this.makeAnnotatedFeatureVectors
-    val featureBuffer = collection.mutable.Buffer[Vector[(String, Any)]]()
+    val featureBuffer = collection.mutable.Buffer[Vector[(String, Double)]]()
 
     for (item <- allFeatureVectors) yield {
       if (featuresToInclude == Vector("lexical")) {
-        featureBuffer += (Vector(item._1) ++ item._2)
+        featureBuffer += item._1 ++ item._2
       } else if (featuresToInclude == Vector("syntactic")) {
-        featureBuffer += Vector(item._1) ++ item._3
+        featureBuffer += item._1 ++ item._3
       } else if (featuresToInclude == Vector("paragraph")) {
-        featureBuffer += Vector(item._1) ++ item._4
+        featureBuffer += item._1 ++ item._4
       } else if (featuresToInclude == Vector("lexical", "syntactic")) {
-        featureBuffer += Vector(item._1) ++ item._2 ++ item._3.slice(2, item._2.length - 1)
+        featureBuffer += item._1 ++ item._2 ++ item._3
       } else if (featuresToInclude == Vector("syntactic", "paragraph")) {
-        featureBuffer += Vector(item._1) ++ item._3 ++ item._4.slice(2, item._2.length - 1)
+        featureBuffer += item._1 ++ item._3 ++ item._4
       } else if (featuresToInclude == Vector("lexical", "paragraph")) {
-        featureBuffer += item._2 ++ item._4.slice(2, item._2.length - 1)
+        featureBuffer += item._1 ++ item._2 ++ item._4
       } else if (featuresToInclude == Vector("lexical", "syntactic", "paragraph")) {
-        featureBuffer += Vector(item._1) ++ item._2 ++ item._3.slice(2, item._2.length - 1) ++ item._4.slice(2, item._2.length - 1)
+        featureBuffer += item._1 ++ item._2 ++ item._3 ++ item._4
       }
     }
     val svmFile = toSVM(featureBuffer)
@@ -108,14 +112,15 @@ class MachineLearning(
       svmFile.map(line => pw.println(line))
       pw.close
 
-    //TODO fix
-      def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Any)]]) = {
+      def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Double)]]) = {
         for (row <- buffer) yield {
-          row.head._2 + " " + {
-            (for (i <- 1 to row.length - 3) yield {
-              i.toString + ":" + row(i).toString).mkString(" ")
-            })
-          } + "#" + buffer.head._1
+          row(1)._1 + " " + {                                         //the grade level
+            for (i <- 2 to row.length - 1) yield {
+              " " + (i-1).toString +                                  //the feature index
+              ":" +
+              row(i).toString                                         //the feature value
+            }
+          } + "#" + row.head._1                                       //the title
         }
       }
   }
