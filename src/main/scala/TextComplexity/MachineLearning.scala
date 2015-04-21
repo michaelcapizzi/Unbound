@@ -157,7 +157,6 @@ class MachineLearning(
     pw.close
   }
 
-  //TODO test - confirm only one space between each feature with two parameters
   //builds svmLight feature vector
   def buildAnnotatedFinalFeatureVector = {
     val allFeatureVectors = this.makeAnnotatedFeatureClasses
@@ -206,11 +205,12 @@ class MachineLearning(
     val folderName = featureVectorFileName.dropRight(7)                                                                                 //name folder after parameters
     val newFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)                           //make new folder
     newFolder.mkdir()                                                                                                                   //create directory
+
     for (i <- 0 to Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.size - 1) {       //set for indexes
-      val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream(i)       //the line for testing
-      val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.take(i)
-      val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.drop(i + 1)
-      //remove that row from the whole file and make a train file -- sista
+      val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream(i)                       //the line for testing
+      val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.take(i)       //lines for training BEFORE testing line
+      val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.drop(i + 1)    //lines for training AFTER testing line
+      val train = (trainBeforeTest ++ trainAfterTest).toVector                                                                                                          //concatenated training lines
       //put both in the new folder with names .train and .test
     }
     //import main SVM file
