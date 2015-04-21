@@ -35,17 +35,23 @@ class MachineLearning(
     textDocuments
   }
 
-  //TODO rewrite using FIND and REGEX instead of ZIP
   //load annotated files from folder and make TextDocument for each
   def importAnnotatedMakeDocuments = {
-    val tuple = rawFile.listFiles zip annotatedFile.listFiles                                           //get a list of raw files and annotated files
-    tuple.map(item =>                                                                                     //for each
-      makeDocumentFromSerial(item._1.getCanonicalPath, item._2.getCanonicalPath, processor)).toVector       //import annotation
+    val tuple = for (file <- rawFile.listFiles) yield {                                                                                           //get a list of raw files and annotated files
+      val fileName = file.getName.dropRight(file.getName.length - file.getName.indexOf("."))
+      (                                                                                                                                             //make tuple of
+        file,                                                                                                                                         //rawFile
+        annotatedFile.listFiles.find(item => item.getName.contains(fileName)).get                                                                     //annotatedFile
+      )
+    }
+    tuple.map(item =>                                                                                                                                   //for each
+      makeDocumentFromSerial(item._2.getCanonicalPath, item._1.getCanonicalPath, processor)).toVector                                                     //import annotationFile
   }
 
-  //TODO build and test
-  def importTestRawMakeDocuments = {
-    //
+  def importTestRawMakeDocument = {
+    val doc = makeDocument(textToTestFilePath, processor)
+    doc.annotate
+    doc
   }
 
   //make features from Raw import
@@ -62,14 +68,13 @@ class MachineLearning(
 
       (
         metaData,
-        lexicalFeatures.slice(2, lexicalFeatures.length - 1).asInstanceOf[Vector[(String, Double)]],          //without metadata
-        syntacticFeatures.slice(2, syntacticFeatures.length - 1).asInstanceOf[Vector[(String, Double)]],      //without metadata
-        paragraphFeatures.slice(2, paragraphFeatures.length - 1).asInstanceOf[Vector[(String, Double)]]       ///without metadata
+        lexicalFeatures.slice(2, lexicalFeatures.length).asInstanceOf[Vector[(String, Double)]],          //without metadata
+        syntacticFeatures.slice(2, syntacticFeatures.length).asInstanceOf[Vector[(String, Double)]],      //without metadata
+        paragraphFeatures.slice(2, paragraphFeatures.length).asInstanceOf[Vector[(String, Double)]]       ///without metadata
       )
     }
   }
 
-  //TODO test
   //make features from annotated import
   def makeAnnotatedFeatureClasses = {
     for (item <- this.importAnnotatedMakeDocuments) yield {
@@ -84,18 +89,31 @@ class MachineLearning(
 
       (
         metaData,
-        lexicalFeatures.slice(2, lexicalFeatures.length - 1).asInstanceOf[Vector[(String, Double)]],          //without metadata
-        syntacticFeatures.slice(2, syntacticFeatures.length - 1).asInstanceOf[Vector[(String, Double)]],      //without metadata
-        paragraphFeatures.slice(2, paragraphFeatures.length - 1).asInstanceOf[Vector[(String, Double)]]       ///without metadata
+        lexicalFeatures.slice(2, lexicalFeatures.length).asInstanceOf[Vector[(String, Double)]],          //without metadata
+        syntacticFeatures.slice(2, syntacticFeatures.length).asInstanceOf[Vector[(String, Double)]],      //without metadata
+        paragraphFeatures.slice(2, paragraphFeatures.length).asInstanceOf[Vector[(String, Double)]]       ///without metadata
       )
     }
   }
 
-  //TODO build and test
   def makeTestFeatureClasses = {
-    //
-  }
+    val doc = this.importTestRawMakeDocument
+    val metaData = Vector((doc.title, 0d), (doc.gradeLevel, 0d))
+    val lexical = new LexicalFeatures(doc)
+    val syntactic = new SyntacticFeatures(doc)
+    val paragraph = new ParagraphFeatures(doc)
 
+    val lexicalFeatures = lexical.makeLexicalFeatureVector
+    val syntacticFeatures = syntactic.makeSyntacticFeatureVector
+    val paragraphFeatures = paragraph.makeParagraphFeatureVector
+
+    (
+      metaData,
+      lexicalFeatures.slice(2, lexicalFeatures.length).asInstanceOf[Vector[(String, Double)]],          //without metadata
+      syntacticFeatures.slice(2, syntacticFeatures.length).asInstanceOf[Vector[(String, Double)]],      //without metadata
+      paragraphFeatures.slice(2, paragraphFeatures.length).asInstanceOf[Vector[(String, Double)]]       ///without metadata
+    )
+  }
 
   //builds svmLight feature vector
   def buildRawFinalFeatureVector = {
@@ -120,25 +138,26 @@ class MachineLearning(
       }
     }
 
-      def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Double)]]) = {
-        for (row <- buffer) yield {
-          row(1)._1 + " " + {                                         //the grade level
-            for (i <- 2 to row.length - 1) yield {
-              " " + (i-1).toString +                                  //the feature index
+    def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Double)]]) = {
+      for (row <- buffer) yield {
+        row(1)._1 + " " + {                                         //the grade level
+          {for (i <- 2 to row.length - 1) yield {
+            (i-1).toString +                                        //the feature index
               ":" +
-              row(i).toString                                         //the feature value
-            }
-          } + "#" + row.head._1                                       //the title
-        }
+              row(i)._2.toString                                    //the feature value
+          }}.mkString(" ")
+        } + " #" + row.head._1                                      //the title
       }
+    }
 
     val svmFile = toSVM(featureBuffer)
-    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileFolder))
+    val featureVectorFileName = this.featuresToInclude.mkString("_") + "-" + this.modelsToUse.mkString("_") + ".master"
+    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
     svmFile.map(line => pw.println(line))
     pw.close
   }
 
-  //TODO figure out how to do file folder and file naming for svm light file
+  //TODO test - confirm only one space between each feature with two parameters
   //builds svmLight feature vector
   def buildAnnotatedFinalFeatureVector = {
     val allFeatureVectors = this.makeAnnotatedFeatureClasses
@@ -165,29 +184,44 @@ class MachineLearning(
     def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Double)]]) = {
       for (row <- buffer) yield {
         row(1)._1 + " " + {                                         //the grade level
-          for (i <- 2 to row.length - 1) yield {
-            " " + (i-1).toString +                                  //the feature index
+          {for (i <- 2 to row.length - 1) yield {
+            (i-1).toString +                                        //the feature index
               ":" +
-              row(i).toString                                         //the feature value
-          }
-        } + "#" + row.head._1                                       //the title
+              row(i)._2.toString                                    //the feature value
+          }}.mkString(" ")
+        } + " #" + row.head._1                                      //the title
       }
     }
 
     val svmFile = toSVM(featureBuffer)
-    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileFolder))
+    val featureVectorFileName = this.featuresToInclude.mkString("_") + "-" + this.modelsToUse.mkString("_") + ".master"
+    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
     svmFile.map(line => pw.println(line))
     pw.close
   }
 
-
-  def importFinalFeatureVector = {
-    //featureVectorFile.listFiles.map(item => )
+  //TODO build
+  def buildLeaveOneOutSVMFiles = {
+    val featureVectorFileName = this.featuresToInclude.mkString("_") + "-" + this.modelsToUse.mkString("_") + ".master"                 //find .master file based on parameters
+    val folderName = featureVectorFileName.dropRight(7)                                                                                 //name folder after parameters
+    val newFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)                           //make new folder
+    newFolder.mkdir()                                                                                                                   //create directory
+    for (i <- 0 to Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.size - 1) {       //set for indexes
+      val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream(i)       //the line for testing
+      val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.take(i)
+      val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.drop(i + 1)
+      //remove that row from the whole file and make a train file -- sista
+      //put both in the new folder with names .train and .test
+    }
+    //import main SVM file
+    //make folder based on SVM file name
+    //for each row
+      //get name (#)
+      //make folder with that name
   }
 
   def leaveOneOut = {
-    //take SVM light file
-      //generate all possible combinations
+    //import files from featureVectorFileFolder
     //HOW TO HANDLE parameter selections?
   }
 

@@ -14,6 +14,7 @@ import scala.io.Source
  */
 class LexicalFeatures(textDocument: TextDocument) {
 
+  //TODO how to deal with no words in that part of speech
   //most frequently used words by POS
   def mostFrequentWords = {
     val frequencyNouns = new Frequency()
