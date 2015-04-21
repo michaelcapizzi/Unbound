@@ -22,7 +22,6 @@ class MachineLearning(
                        val textToTestFilePath: String = ""
                        ) {
 
-  //TODO test all methods
 
   val rawFile = new File(rawTextFileFolder)
   val annotatedFile = new File(annotatedTextFileFolder)
@@ -30,19 +29,21 @@ class MachineLearning(
 
   //load raw files from folder and make TextDocument for each
   def importRawMakeDocuments = {
-    val textDocuments = rawFile.listFiles.map(item =>
-      makeDocument(item.getCanonicalPath, processor)).toVector
-    textDocuments.map(_.annotate)
+    val textDocuments = rawFile.listFiles.map(item =>                       //get a list of files and for each
+      makeDocument(item.getCanonicalPath, processor)).toVector                //make document turn into vector
+    textDocuments.map(_.annotate)                                             //annotate all documents
     textDocuments
   }
 
+  //TODO rewrite using FIND and REGEX instead of ZIP
   //load annotated files from folder and make TextDocument for each
   def importAnnotatedMakeDocuments = {
-    val tuple = rawFile.listFiles zip annotatedFile.listFiles
-    tuple.map(item =>
-      makeDocumentFromSerial(item._1.getCanonicalPath, item._2.getCanonicalPath, processor)).toVector
+    val tuple = rawFile.listFiles zip annotatedFile.listFiles                                           //get a list of raw files and annotated files
+    tuple.map(item =>                                                                                     //for each
+      makeDocumentFromSerial(item._1.getCanonicalPath, item._2.getCanonicalPath, processor)).toVector       //import annotation
   }
 
+  //TODO build and test
   def importTestRawMakeDocuments = {
     //
   }
@@ -50,43 +51,55 @@ class MachineLearning(
   //make features from Raw import
   def makeRawFeatureClasses = {
     for (item <- this.importRawMakeDocuments) yield {
-      val metaData = (item.title, item.gradeLevel)
+      val metaData = Vector((item.title, 0d), (item.gradeLevel, 0d))
       val lexical = new LexicalFeatures(item)
       val syntactic = new SyntacticFeatures(item)
       val paragraph = new ParagraphFeatures(item)
+
+      val lexicalFeatures = lexical.makeLexicalFeatureVector
+      val syntacticFeatures = syntactic.makeSyntacticFeatureVector
+      val paragraphFeatures = paragraph.makeParagraphFeatureVector
+
       (
         metaData,
-        lexical.makeLexicalFeatureVector.slice(2, lexical.makeLexicalFeatureVector.length - 1),             //without metadata
-        syntactic.makeSyntacticFeatureVector.slice(2, syntactic.makeSyntacticFeatureVector.length - 1),     //without metadata
-        paragraph.makeParagraphFeatureVector.slice(2, paragraph.makeParagraphFeatureVector.length - 1)      //without metadata
+        lexicalFeatures.slice(2, lexicalFeatures.length - 1).asInstanceOf[Vector[(String, Double)]],          //without metadata
+        syntacticFeatures.slice(2, syntacticFeatures.length - 1).asInstanceOf[Vector[(String, Double)]],      //without metadata
+        paragraphFeatures.slice(2, paragraphFeatures.length - 1).asInstanceOf[Vector[(String, Double)]]       ///without metadata
       )
     }
   }
 
+  //TODO test
   //make features from annotated import
-  def makeAnnotatedFeatureVectors = {
+  def makeAnnotatedFeatureClasses = {
     for (item <- this.importAnnotatedMakeDocuments) yield {
       val metaData = Vector((item.title, 0d), (item.gradeLevel, 0d))
       val lexical = new LexicalFeatures(item)
       val syntactic = new SyntacticFeatures(item)
       val paragraph = new ParagraphFeatures(item)
+
+      val lexicalFeatures = lexical.makeLexicalFeatureVector
+      val syntacticFeatures = syntactic.makeSyntacticFeatureVector
+      val paragraphFeatures = paragraph.makeParagraphFeatureVector
+
       (
         metaData,
-        lexical.makeLexicalFeatureVector.slice(2, lexical.makeLexicalFeatureVector.length - 1).asInstanceOf[Vector[(String, Double)]],             //without metadata
-        syntactic.makeSyntacticFeatureVector.slice(2, syntactic.makeSyntacticFeatureVector.length - 1).asInstanceOf[Vector[(String, Double)]],     //without metadata
-        paragraph.makeParagraphFeatureVector.slice(2, paragraph.makeParagraphFeatureVector.length - 1).asInstanceOf[Vector[(String, Double)]]      //without metadata
+        lexicalFeatures.slice(2, lexicalFeatures.length - 1).asInstanceOf[Vector[(String, Double)]],          //without metadata
+        syntacticFeatures.slice(2, syntacticFeatures.length - 1).asInstanceOf[Vector[(String, Double)]],      //without metadata
+        paragraphFeatures.slice(2, paragraphFeatures.length - 1).asInstanceOf[Vector[(String, Double)]]       ///without metadata
       )
     }
   }
 
+  //TODO build and test
   def makeTestFeatureClasses = {
     //
   }
 
-    //concatenate features from class parameter
-    //build into SVM light format
-  def buildFinalFeatureVector = {
-    val allFeatureVectors = this.makeAnnotatedFeatureVectors
+
+  //builds svmLight feature vector
+  def buildRawFinalFeatureVector = {
+    val allFeatureVectors = this.makeRawFeatureClasses
     val featureBuffer = collection.mutable.Buffer[Vector[(String, Double)]]()
 
     for (item <- allFeatureVectors) yield {
@@ -106,11 +119,6 @@ class MachineLearning(
         featureBuffer += item._1 ++ item._2 ++ item._3 ++ item._4
       }
     }
-    val svmFile = toSVM(featureBuffer)
-    //build into one SVM light file with all files
-      val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileFolder))
-      svmFile.map(line => pw.println(line))
-      pw.close
 
       def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Double)]]) = {
         for (row <- buffer) yield {
@@ -123,7 +131,55 @@ class MachineLearning(
           } + "#" + row.head._1                                       //the title
         }
       }
+
+    val svmFile = toSVM(featureBuffer)
+    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileFolder))
+    svmFile.map(line => pw.println(line))
+    pw.close
   }
+
+  //TODO figure out how to do file folder and file naming for svm light file
+  //builds svmLight feature vector
+  def buildAnnotatedFinalFeatureVector = {
+    val allFeatureVectors = this.makeAnnotatedFeatureClasses
+    val featureBuffer = collection.mutable.Buffer[Vector[(String, Double)]]()
+
+    for (item <- allFeatureVectors) yield {
+      if (featuresToInclude == Vector("lexical")) {
+        featureBuffer += item._1 ++ item._2
+      } else if (featuresToInclude == Vector("syntactic")) {
+        featureBuffer += item._1 ++ item._3
+      } else if (featuresToInclude == Vector("paragraph")) {
+        featureBuffer += item._1 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic")) {
+        featureBuffer += item._1 ++ item._2 ++ item._3
+      } else if (featuresToInclude == Vector("syntactic", "paragraph")) {
+        featureBuffer += item._1 ++ item._3 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "paragraph")) {
+        featureBuffer += item._1 ++ item._2 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic", "paragraph")) {
+        featureBuffer += item._1 ++ item._2 ++ item._3 ++ item._4
+      }
+    }
+
+    def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Double)]]) = {
+      for (row <- buffer) yield {
+        row(1)._1 + " " + {                                         //the grade level
+          for (i <- 2 to row.length - 1) yield {
+            " " + (i-1).toString +                                  //the feature index
+              ":" +
+              row(i).toString                                         //the feature value
+          }
+        } + "#" + row.head._1                                       //the title
+      }
+    }
+
+    val svmFile = toSVM(featureBuffer)
+    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileFolder))
+    svmFile.map(line => pw.println(line))
+    pw.close
+  }
+
 
   def importFinalFeatureVector = {
     //featureVectorFile.listFiles.map(item => )
