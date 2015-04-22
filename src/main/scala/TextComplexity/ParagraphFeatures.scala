@@ -1,5 +1,6 @@
 package TextComplexity
 
+import edu.arizona.sista.discourse.rstparser.DiscourseTree
 import org.apache.commons.math3.stat.Frequency
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 
@@ -8,7 +9,7 @@ import scala.util.matching.Regex
 /**
  * Created by mcapizzi on 4/7/15.
  */
-class ParagraphFeatures(textDocument: TextDocument) {
+class ParagraphFeatures(val textDocument: TextDocument) {
 
   //paragraph size stats
   def getParagraphLengths = {
@@ -28,9 +29,6 @@ class ParagraphFeatures(textDocument: TextDocument) {
     )
   }
 
-  //discourse
-  //https://github.com/sistanlp/processors/blob/master/src/main/scala/edu/arizona/sista/discourse/rstparser/DiscourseTree.scala
-
   def getDiscourseTrees = {
     textDocument.document.map(_.discourseTree).map(_.get)
   }
@@ -47,7 +45,7 @@ class ParagraphFeatures(textDocument: TextDocument) {
       ))
   }
 
-
+  //TODO count empty Arrays? --> indicates no relations
   def discourseRelationsStats = {
     val paragraphLengths = this.getParagraphLengths
     val relations = this.getDiscourseRelations.map(_.map(_._1))
@@ -103,8 +101,6 @@ class ParagraphFeatures(textDocument: TextDocument) {
       "percent of 'elaboration' relations in text" -> relationTypes.getOrElse("elaboration", 0.0)
     )
   }
-
-  //count empty Arrays --> indicates no relations
 
   def makeParagraphFeatureVector = {
     Vector(

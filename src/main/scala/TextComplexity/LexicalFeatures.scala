@@ -12,7 +12,7 @@ import scala.io.Source
 /**
  * Created by mcapizzi on 4/7/15.
  */
-class LexicalFeatures(textDocument: TextDocument) {
+class LexicalFeatures(val textDocument: TextDocument) {
 
   //TODO how to deal with no words in that part of speech
   //most frequently used words by POS

@@ -151,7 +151,7 @@ class MachineLearning(
     }
 
     val svmFile = toSVM(featureBuffer)
-    val featureVectorFileName = this.featuresToInclude.mkString("_") + "-" + this.modelsToUse.mkString("_") + ".master"
+    val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"
     val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
     svmFile.map(line => pw.println(line))
     pw.close
@@ -193,15 +193,15 @@ class MachineLearning(
     }
 
     val svmFile = toSVM(featureBuffer)
-    val featureVectorFileName = this.featuresToInclude.mkString("_") + "-" + this.modelsToUse.mkString("_") + ".master"
+    val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"
     val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
     svmFile.map(line => pw.println(line))
     pw.close
   }
 
-  //TODO build
+  /*//TODO build
   def buildLeaveOneOutSVMFiles = {
-    val featureVectorFileName = this.featuresToInclude.mkString("_") + "-" + this.modelsToUse.mkString("_") + ".master"                 //find .master file based on parameters
+    val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"                                                  //find .master file based on parameters
     val folderName = featureVectorFileName.dropRight(7)                                                                                 //name folder after parameters
     val newFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)                           //make new folder
     newFolder.mkdir()                                                                                                                   //create directory
@@ -211,6 +211,8 @@ class MachineLearning(
       val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.take(i)       //lines for training BEFORE testing line
       val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.drop(i + 1)    //lines for training AFTER testing line
       val train = (trainBeforeTest ++ trainAfterTest).toVector                                                                                                          //concatenated training lines
+      val titleRegex = """\#[A-Za-z]+""".r
+      val insideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + )
       //put both in the new folder with names .train and .test
     }
     //import main SVM file
@@ -218,7 +220,7 @@ class MachineLearning(
     //for each row
       //get name (#)
       //make folder with that name
-  }
+  }*/
 
   def leaveOneOut = {
     //import files from featureVectorFileFolder

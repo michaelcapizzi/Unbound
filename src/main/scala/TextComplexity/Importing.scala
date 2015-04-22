@@ -13,6 +13,9 @@ import scala.io.Source
  */
 object Importing {
 
+  //TODO re-add Little Women and Crime and Punishment
+  //TODO add means of ignoring text before story starts (/* */)
+
   def importParagraphs(filePath: String): Vector[String] = {
     val finalBuffer = mutable.ListBuffer[String]()
     val insideBuffer = mutable.ListBuffer[String]()
