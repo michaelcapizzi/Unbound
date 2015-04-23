@@ -338,38 +338,60 @@ class MachineLearning(
     val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)         //select proper outside folder based on parameters
 
     val scoreList = for (model <- modelsToUse) yield {
-      val classifier = model match {                                                                        //build the classifier
-        case "logisticRegression" => new LogisticRegressionClassifier[Int, String](bias = false)
-        case "perceptron" => new PerceptronClassifier[Int, String](epochs = 20, marginRatio = 1d)
-        case "randomForest" => new RandomForestClassifier[Int, String](
-          numTrees = 1000,
-          featureSampleRatio = -0.20,
-          maxTreeDepth = 4
+
+      if (model == "naiveBayes") {                                                                              //if Naive Bayes
+        val allDocs = this.importAnnotatedMakeDocuments                       //get all documents
+        (
+          "naiveBayes",
+          for (document <- allDocs) yield {                                     //for each document...
+            val test = Vector(document)                                             //make it test
+            val train = allDocs.filterNot(_ == document).toVector                   //and all other docs part of train
+            val nb = new NaiveBayes(train, test, Vector(), 0, 0, 0)
+
+            /*(
+              //title,
+              nb.argMax,      //mlScore
+              document.label  //actualScore
+            )*/
+
+          }
         )
-      }
 
-      (
-        model,                                                                                                //classifier name
-        for (insideFolder <- outsideFolder.listFiles) yield {                                                       //for each subfolder
-          val train = insideFolder.listFiles.find(fileName => fileName.getName.contains("train")).get           //get train file
-          val test = insideFolder.listFiles.find(fileName => fileName.getName.contains("test")).get             //get test file
-
-          val trainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(train.getCanonicalPath)                     //build training dataset
-          val testDataSet = RVFDataset.mkDatumsFromSvmLightFormat(test.getCanonicalPath)                        //build test dataset
-
-          classifier.train(trainDataSet)
-
-          val titleRegex = """#(.*)""".r
-          val line = Source.fromFile(test).getLines.toVector.head
-          val title = titleRegex.replaceFirstIn(line, """$1""")
-
-          (
-            title,                                                                                              //title
-            revertLabel(classifier.classOf(testDataSet.head)),                                                  //mlScore
-            revertLabel(testDataSet.head.label)                                                                 //actualScore
+      } else {
+        val classifier = model match {                                                                          //else build the classifier
+          case "logisticRegression" => new LogisticRegressionClassifier[Int, String](bias = false)
+          case "perceptron" => new PerceptronClassifier[Int, String](epochs = 20, marginRatio = 1d)
+          case "randomForest" => new RandomForestClassifier[Int, String](
+            numTrees = 1000,
+            featureSampleRatio = -0.20,
+            maxTreeDepth = 4
           )
         }
-      )
+
+        (
+          model,                                                                            //classifier name
+          for (insideFolder <- outsideFolder.listFiles) yield {
+            //for each subfolder
+            val train = insideFolder.listFiles.find(fileName => fileName.getName.contains("train")).get             //get train file
+            val test = insideFolder.listFiles.find(fileName => fileName.getName.contains("test")).get               //get test file
+
+            val trainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(train.getCanonicalPath)                       //build training dataset
+            val testDataSet = RVFDataset.mkDatumsFromSvmLightFormat(test.getCanonicalPath)                          //build test dataset
+
+            classifier.train(trainDataSet)
+
+            val titleRegex = """#(.*)""".r
+            val line = Source.fromFile(test).getLines.toVector.head
+            val title = titleRegex.replaceFirstIn(line, """$1""")
+
+            (
+              title,                                                                        //title
+              revertLabel(classifier.classOf(testDataSet.head)),                            //mlScore
+              revertLabel(testDataSet.head.label)                                           //actualScore
+              )
+          }
+        )
+      }
     }
     if (withEnsemble) {
       /*

@@ -16,9 +16,6 @@ import scala.collection.mutable._
  */
 class SyntacticFeatures(val textDocument: TextDocument) {
 
-  //TODO test wordSimilarity on longer text
-      //include print statements?
-
   def getSentences = {
     textDocument.document.map(_.sentences.map(_.words)).flatten
   }
