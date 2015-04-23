@@ -157,6 +157,7 @@ class SyntacticFeatures(val textDocument: TextDocument) {
       )
   }
 
+  //TODO adjust to calculate for sentence -- add word similarity vectors elementwise within a sentence
   def getWordSimilaritySentenceScores = {
     val importantWords = for (sentence <- textDocument.lexicalTupleInSentences) yield {
         sentence.filter(word => word._2._2.matches("NN.*") || word._2._2.matches("VB.*") || word._2._2.matches("JJ.*") || word._2._2.matches("RB.*")).    //keep *only important POS

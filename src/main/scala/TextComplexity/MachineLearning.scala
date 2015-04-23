@@ -206,7 +206,7 @@ class MachineLearning(
     }
 
     val svmFile = toSVM(featureBuffer)
-    val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"
+    val featureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "similarity.master" else this.featuresToInclude.mkString("_") + ".master"
     val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
     svmFile.map(line => pw.println(line))
     pw.close
@@ -293,7 +293,7 @@ class MachineLearning(
     }
 
     val svmFile = toSVM(featureBuffer)
-    val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"
+    val featureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "similarity.master" else this.featuresToInclude.mkString("_") + ".master"
     val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
     svmFile.map(line => pw.println(line))
     pw.close
