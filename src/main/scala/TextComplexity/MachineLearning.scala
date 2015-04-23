@@ -54,6 +54,7 @@ class MachineLearning(
     doc
   }
 
+  //TODO make if/then to match parameters
   //make features from Raw import
   def makeRawFeatureClasses = {
     for (item <- this.importRawMakeDocuments) yield {
@@ -75,6 +76,7 @@ class MachineLearning(
     }
   }
 
+  //TODO make if/then to match parameters
   //make features from annotated import
   def makeAnnotatedFeatureClasses = {
     for (item <- this.importAnnotatedMakeDocuments) yield {
@@ -96,6 +98,7 @@ class MachineLearning(
     }
   }
 
+  //TODO make if/then to match parameters
   def makeTestFeatureClasses = {
     val doc = this.importTestRawMakeDocument
     val metaData = Vector((doc.title, 0d), (doc.gradeLevel, 0d))
@@ -199,28 +202,32 @@ class MachineLearning(
     pw.close
   }
 
-  /*//TODO build
+  //TODO test
   def buildLeaveOneOutSVMFiles = {
-    val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"                                                  //find .master file based on parameters
+    val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"                                                        //find .master file based on parameters
     val folderName = featureVectorFileName.dropRight(7)                                                                                 //name folder after parameters
-    val newFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)                           //make new folder
-    newFolder.mkdir()                                                                                                                   //create directory
+    val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)                           //make new folder
+    outsideFolder.mkdir()                                                                                                                   //create directory
 
     for (i <- 0 to Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.size - 1) {       //set for indexes
+
       val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream(i)                       //the line for testing
       val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.take(i)       //lines for training BEFORE testing line
       val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.drop(i + 1)    //lines for training AFTER testing line
       val train = (trainBeforeTest ++ trainAfterTest).toVector                                                                                                          //concatenated training lines
-      val titleRegex = """\#[A-Za-z]+""".r
-      val insideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + )
-      //put both in the new folder with names .train and .test
+      val insideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + (i + 1).toString)                                                //name of inside folder
+
+      val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + insideFolder + "/" + (i + 1).toString + "/" + (i + 1).toString + ".train"))
+      val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + insideFolder + "/" + (i + 1).toString + "/" + (i + 1).toString + ".test"))
+
+      train.map(line => pwTrain.println(line))
+      pwTrain.close
+
+      test.map(line => pwTest.println(line))
+      pwTest.close
+
     }
-    //import main SVM file
-    //make folder based on SVM file name
-    //for each row
-      //get name (#)
-      //make folder with that name
-  }*/
+  }
 
   def leaveOneOut = {
     //import files from featureVectorFileFolder
