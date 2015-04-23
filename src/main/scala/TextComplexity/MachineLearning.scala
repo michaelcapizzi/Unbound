@@ -372,13 +372,36 @@ class MachineLearning(
       )
     }
     if (withEnsemble) {
-      //
+      /*
+      ////////////////ensemble - voting///////////////////////
+
+  //put all scores in a list:
+    //List(lr, simple, perceptron)
+
+  //make collected score list
+  def makeCollectedScoreList(scoreList: List[List[(String, String, String)]]): List[(String, List[String])] = {
+    val titles = scoreList.map(_.map(_._1))
+    for (title <- titles(0)) yield
+      title ->
+        scoreList.map(scores => scores.find(item => item._1 == title).get).map(_._2)
+  }
+
+  //takes a List[title, List[Scores]
+ def ensembleVoting(scores: List[(String, List[String])], tieBreakerIndex: Int): List[(String, String)] = {
+    for (score <- scores) yield (score._1, {
+      val record = score._2.groupBy(item => item).values.toList.map(thing => thing(0) -> thing.length).toMap
+      if (record.values.toList.length == scores.map(_._2).length) score._2(tieBreakerIndex)
+      else record.maxBy(_._2)._1
+      }
+      )
+  }
+       */
     } else {
       scoreList
     }
   }
 
-  //TODO build using Counters (see UsingCountersDatums)
+  /*//TODO build using Counters (see UsingCountersDatums)
   def fullTrainAndTest = {
     val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"
     val trainFile = RVFDataset.mkDatasetFromSvmLightFormat("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName)
@@ -407,7 +430,7 @@ class MachineLearning(
 
        */
     }
-  }
+  }*/
 
 
 
