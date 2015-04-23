@@ -14,8 +14,15 @@ object UsingCountersDatums {
   //make a features list
   val list = List("a","b","C")
 
+  val it = new Counter
   //how to use counter
   list.map(counter.incrementCount(_))
+
+  //can manually set counter value
+  counter.setCount("blah", 55d)
+
+  val tuple = List(("z", 5d), ("y", 4d), ("x", 3d))
+  tuple.map(each => counter.setCount(each._1, each._2))
 
   //make a label
 

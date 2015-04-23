@@ -3,6 +3,7 @@ package TextComplexity
 import java.io._
 import Importing._
 import Serializing._
+import edu.arizona.sista.learning.{RandomForestClassifier, PerceptronClassifier, LogisticRegressionClassifier, RVFDataset}
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import scala.collection.mutable.Buffer
 import scala.collection.parallel.mutable
@@ -18,14 +19,13 @@ class MachineLearning(
                        val featuresToInclude: Vector[String],       //required
                        val modelsToUse: Vector[String],             //required
                        val rawTextFileFolder: String = "",
-                       val featureVectorFileFolder: String = "",
+                       //val featureVectorFileFolder: String = "",
                        val textToTestFilePath: String = ""
                        ) {
 
-
   val rawFile = new File(rawTextFileFolder)
   val annotatedFile = new File(annotatedTextFileFolder)
-  val featureVectorFile = new File(featureVectorFileFolder)
+  //val featureVectorFile = new File(featureVectorFileFolder)
 
   //load raw files from folder and make TextDocument for each
   def importRawMakeDocuments = {
@@ -54,8 +54,7 @@ class MachineLearning(
     doc
   }
 
-  //TODO make if/then to match parameters
-  //make features from Raw import
+  //make features from raw text
   def makeRawFeatureClasses = {
     for (item <- this.importRawMakeDocuments) yield {
       val metaData = Vector((item.title, 0d), (item.gradeLevel, 0d))
@@ -72,11 +71,41 @@ class MachineLearning(
         lexicalFeatures.slice(2, lexicalFeatures.length).asInstanceOf[Vector[(String, Double)]],          //without metadata
         syntacticFeatures.slice(2, syntacticFeatures.length).asInstanceOf[Vector[(String, Double)]],      //without metadata
         paragraphFeatures.slice(2, paragraphFeatures.length).asInstanceOf[Vector[(String, Double)]]       ///without metadata
-      )
+        )
     }
   }
 
-  //TODO make if/then to match parameters
+  /*
+  attempt to only run features required but doesn't work
+  //make features from Raw import
+  def makeRawFeatureClasses2 = {
+    for (item <- this.importRawMakeDocuments) yield {                                                   //for each document
+      val metadata = Vector((item.title, ""), (item.gradeLevel, ""))
+
+      val features = for (feature <- this.featuresToInclude) yield {                                      //for each feature in parameters
+        if (feature == "lexical") {
+          val lexical = new LexicalFeatures(item)
+          val lexicalFeatures = lexical.makeLexicalFeatureVector
+          lexicalFeatures.slice(2, lexicalFeatures.length).map(_._2.toString)          //without metadata
+        } else if (feature == "syntactic") {
+          val syntactic = new SyntacticFeatures(item)
+          val syntacticFeatures = syntactic.makeSyntacticFeatureVector
+          syntacticFeatures.slice(2, syntacticFeatures.length).map(_._2.toString)      //without metadata
+        } else if (feature == "paragraph") {
+          val paragraph = new ParagraphFeatures(item)
+          val paragraphFeatures = paragraph.makeParagraphFeatureVector
+          paragraphFeatures.slice(2, paragraphFeatures.length).map(_._2.toString)       ///without metadata
+        }
+      }
+      features match {
+        case Vector(a) => (metadata, a.asInstanceOf[Vector[(String, String)]], Vector(("","")), Vector(("", "")).asInstanceOf[Vector[(String, String)]])
+        case Vector(a, b) => (metadata, a.asInstanceOf[Vector[(String, String)]], b.asInstanceOf[Vector[(String, String)]], Vector("",0d).asInstanceOf[Vector[(String, String)]])
+        case Vector(a,b,c) => (metadata, a.asInstanceOf[Vector[(String, String)]], b.asInstanceOf[Vector[(String, String)]], c.asInstanceOf[Vector[(String, String)]])
+      }
+    }
+  }
+  */
+
   //make features from annotated import
   def makeAnnotatedFeatureClasses = {
     for (item <- this.importAnnotatedMakeDocuments) yield {
@@ -98,7 +127,6 @@ class MachineLearning(
     }
   }
 
-  //TODO make if/then to match parameters
   def makeTestFeatureClasses = {
     val doc = this.importTestRawMakeDocument
     val metaData = Vector((doc.title, 0d), (doc.gradeLevel, 0d))
@@ -117,6 +145,30 @@ class MachineLearning(
       paragraphFeatures.slice(2, paragraphFeatures.length).asInstanceOf[Vector[(String, Double)]]       ///without metadata
     )
   }
+
+
+  def convertLabel(label: String): String = {
+    label match {
+      case "0001" => "0"
+      case "0203" => "1"
+      case "0405" => "2"
+      case "0608" => "3"
+      case "0910" => "4"
+      case "1112" => "5"
+    }
+  }
+
+  def revertLabel(label: Int): String = {
+    label match {
+      case 0 => "0001"
+      case 1 => "0203"
+      case 2 => "0405"
+      case 3 => "0608"
+      case 4 => "0910"
+      case 5 => "1112"
+    }
+  }
+
 
   //builds svmLight feature vector
   def buildRawFinalFeatureVector = {
@@ -143,7 +195,7 @@ class MachineLearning(
 
     def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Double)]]) = {
       for (row <- buffer) yield {
-        row(1)._1 + " " + {                                         //the grade level
+        convertLabel(row(1)._1) + " " + {                                         //the grade level
           {for (i <- 2 to row.length - 1) yield {
             (i-1).toString +                                        //the feature index
               ":" +
@@ -160,6 +212,51 @@ class MachineLearning(
     pw.close
   }
 
+  /*
+  //builds svmLight feature vector
+  def buildRawFinalFeatureVector = {
+    val allFeatureVectors = this.makeRawFeatureClasses
+    val featureBuffer = collection.mutable.Buffer[Vector[(String, String)]]()
+
+    for (item <- allFeatureVectors) yield {
+      if (featuresToInclude == Vector("lexical")) {
+        featureBuffer += item._1 ++ item._2
+      } else if (featuresToInclude == Vector("syntactic")) {
+        featureBuffer += item._1 ++ item._3
+      } else if (featuresToInclude == Vector("paragraph")) {
+        featureBuffer += item._1 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic")) {
+        featureBuffer += item._1 ++ item._2 ++ item._3
+      } else if (featuresToInclude == Vector("syntactic", "paragraph")) {
+        featureBuffer += item._1 ++ item._3 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "paragraph")) {
+        featureBuffer += item._1 ++ item._2 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic", "paragraph")) {
+        featureBuffer += item._1 ++ item._2 ++ item._3 ++ item._4
+      }
+    }
+
+    def toSVM(buffer: collection.mutable.Buffer[Vector[(String, String)]]) = {
+      for (row <- buffer) yield {
+        convertLabel(row(1)._1) + " " + {                                         //the grade level
+          {for (i <- 2 to row.length - 1) yield {
+            (i-1).toString +                                        //the feature index
+              ":" +
+              row(i)._2                                             //the feature value
+          }}.mkString(" ")
+        } + " #" + row.head._1                                      //the title
+      }
+    }
+
+    val svmFile = toSVM(featureBuffer)
+    val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"
+    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
+    svmFile.map(line => pw.println(line))
+    pw.close
+  }
+  */
+
+  //TODO test convertLabel on just lexical and test
   //builds svmLight feature vector
   def buildAnnotatedFinalFeatureVector = {
     val allFeatureVectors = this.makeAnnotatedFeatureClasses
@@ -185,7 +282,7 @@ class MachineLearning(
 
     def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Double)]]) = {
       for (row <- buffer) yield {
-        row(1)._1 + " " + {                                         //the grade level
+        convertLabel(row(1)._1) + " " + {                                         //the grade level
           {for (i <- 2 to row.length - 1) yield {
             (i-1).toString +                                        //the feature index
               ":" +
@@ -220,7 +317,9 @@ class MachineLearning(
       insideFolder.mkdir()
 
       val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + insideFolder + "/" + (i + 1).toString + "/" + (i + 1).toString + ".train"))
+      //val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + (i + 1).toString + ".train"))
       val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + insideFolder + "/" + (i + 1).toString + "/" + (i + 1).toString + ".test"))
+      //val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + (i + 1).toString + ".test"))
 
       train.map(line => pwTrain.println(line))
       pwTrain.close
@@ -231,18 +330,86 @@ class MachineLearning(
     }
   }
 
-  def leaveOneOut = {
-    //import files from featureVectorFileFolder
-    //HOW TO HANDLE parameter selections?
+  //TODO test
+  //TODO add ensemble capability
+  //TODO add NaiveBayes capability
+  def leaveOneOut(withEnsemble: Boolean = false) = {
+    val folderName = this.featuresToInclude.mkString("_")
+    val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)         //select proper outside folder based on parameters
+
+    val scoreList = for (model <- modelsToUse) yield {
+      val classifier = model match {                                                                        //build the classifier
+        case "logisticRegression" => new LogisticRegressionClassifier[Int, String](bias = false)
+        case "perceptron" => new PerceptronClassifier[Int, String](epochs = 20, marginRatio = 1d)
+        case "randomForest" => new RandomForestClassifier[Int, String](
+          numTrees = 1000,
+          featureSampleRatio = -0.20,
+          maxTreeDepth = 4
+        )
+      }
+
+      (
+        model,                                                                                                //classifier name
+        for (insideFolder <- outsideFolder.listFiles) yield {                                                       //for each subfolder
+          val train = insideFolder.listFiles.find(fileName => fileName.getName.contains("train")).get           //get train file
+          val test = insideFolder.listFiles.find(fileName => fileName.getName.contains("test")).get             //get test file
+
+          val trainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(train.getCanonicalPath)                     //build training dataset
+          val testDataSet = RVFDataset.mkDatumsFromSvmLightFormat(test.getCanonicalPath)                        //build test dataset
+
+          classifier.train(trainDataSet)
+
+          val titleRegex = """#(.*)""".r
+          val line = Source.fromFile(test).getLines.toVector.head
+          val title = titleRegex.replaceFirstIn(line, """$1""")
+
+          (
+            title,                                                                                              //title
+            revertLabel(classifier.classOf(testDataSet.head)),                                                  //mlScore
+            revertLabel(testDataSet.head.label)                                                                 //actualScore
+          )
+        }
+      )
+    }
+    if (withEnsemble) {
+      //
+    } else {
+      scoreList
+    }
   }
 
-  def fullTrain = {
-    //take SVM light file as is
-    //HOW TO HANDLE parameter selections?
+  //TODO build using Counters (see UsingCountersDatums)
+  def fullTrainAndTest = {
+    val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"
+    val trainFile = RVFDataset.mkDatasetFromSvmLightFormat("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName)
+
+    for (model <- modelsToUse) yield {
+      val classifier = model match {
+        //build the classifier
+        case "logisticRegression" => new LogisticRegressionClassifier[Int, String](bias = false)
+        case "perceptron" => new PerceptronClassifier[Int, String](epochs = 20, marginRatio = 1d)
+        case "randomForest" => new RandomForestClassifier[Int, String](
+          numTrees = 1000,
+          featureSampleRatio = -0.20,
+          maxTreeDepth = 4
+        )
+      }
+      classifier.train(trainFile)
+
+      val testFilesRaw = new File(textToTestFilePath)
+      val testDocs = for (doc <- testFilesRaw.listFiles) yield {
+        //make test document
+      }
+      //build SVM light file
+      /*
+
+      (
+
+       */
+    }
   }
 
-  def testOne = {
-    //
-  }
+
+
 
 }
