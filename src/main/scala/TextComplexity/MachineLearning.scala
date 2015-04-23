@@ -215,7 +215,9 @@ class MachineLearning(
       val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.take(i)       //lines for training BEFORE testing line
       val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.drop(i + 1)    //lines for training AFTER testing line
       val train = (trainBeforeTest ++ trainAfterTest).toVector                                                                                                          //concatenated training lines
-      val insideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + (i + 1).toString)                                                //name of inside folder
+
+      val insideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + (i + 1).toString)                                                //name of inside folder
+      insideFolder.mkdir()
 
       val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + insideFolder + "/" + (i + 1).toString + "/" + (i + 1).toString + ".train"))
       val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + insideFolder + "/" + (i + 1).toString + "/" + (i + 1).toString + ".test"))
