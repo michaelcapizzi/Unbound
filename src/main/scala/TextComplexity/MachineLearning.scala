@@ -55,7 +55,7 @@ class MachineLearning(
   }
 
   //make features from raw text
-  def makeRawFeatureClasses = {
+  def makeRawFeatureClasses(wordSimilarity: Boolean) = {
     for (item <- this.importRawMakeDocuments) yield {
       val metaData = Vector((item.title, 0d), (item.gradeLevel, 0d))
       val lexical = new LexicalFeatures(item)
@@ -63,7 +63,7 @@ class MachineLearning(
       val paragraph = new ParagraphFeatures(item)
 
       val lexicalFeatures = lexical.makeLexicalFeatureVector
-      val syntacticFeatures = syntactic.makeSyntacticFeatureVector
+      val syntacticFeatures = if (wordSimilarity) syntactic.makeSyntacticFeatureVector else syntactic.makeSyntacticMinusSimilarityFeatureVector
       val paragraphFeatures = paragraph.makeParagraphFeatureVector
 
       (
@@ -107,7 +107,7 @@ class MachineLearning(
   */
 
   //make features from annotated import
-  def makeAnnotatedFeatureClasses = {
+  def makeAnnotatedFeatureClasses(wordSimilarity: Boolean) = {
     for (item <- this.importAnnotatedMakeDocuments) yield {
       val metaData = Vector((item.title, 0d), (item.gradeLevel, 0d))
       val lexical = new LexicalFeatures(item)
@@ -115,7 +115,7 @@ class MachineLearning(
       val paragraph = new ParagraphFeatures(item)
 
       val lexicalFeatures = lexical.makeLexicalFeatureVector
-      val syntacticFeatures = syntactic.makeSyntacticFeatureVector
+      val syntacticFeatures = if (wordSimilarity) syntactic.makeSyntacticFeatureVector else syntactic.makeSyntacticMinusSimilarityFeatureVector
       val paragraphFeatures = paragraph.makeParagraphFeatureVector
 
       (
@@ -127,7 +127,7 @@ class MachineLearning(
     }
   }
 
-  def makeTestFeatureClasses = {
+  def makeTestFeatureClasses(wordSimilarity: Boolean) = {
     val doc = this.importTestRawMakeDocument
     val metaData = Vector((doc.title, 0d), (doc.gradeLevel, 0d))
     val lexical = new LexicalFeatures(doc)
@@ -135,7 +135,7 @@ class MachineLearning(
     val paragraph = new ParagraphFeatures(doc)
 
     val lexicalFeatures = lexical.makeLexicalFeatureVector
-    val syntacticFeatures = syntactic.makeSyntacticFeatureVector
+    val syntacticFeatures = if (wordSimilarity) syntactic.makeSyntacticFeatureVector else syntactic.makeSyntacticMinusSimilarityFeatureVector
     val paragraphFeatures = paragraph.makeParagraphFeatureVector
 
     (
@@ -171,8 +171,8 @@ class MachineLearning(
 
 
   //builds svmLight feature vector
-  def buildRawFinalFeatureVector = {
-    val allFeatureVectors = this.makeRawFeatureClasses
+  def buildRawFinalFeatureVector(wordSimilarity: Boolean) = {
+    val allFeatureVectors = if (wordSimilarity) this.makeRawFeatureClasses(wordSimilarity = true) else this.makeRawFeatureClasses(wordSimilarity = false)
     val featureBuffer = collection.mutable.Buffer[Vector[(String, Double)]]()
 
     for (item <- allFeatureVectors) yield {
@@ -258,8 +258,8 @@ class MachineLearning(
 
   //TODO test convertLabel on just lexical and test
   //builds svmLight feature vector
-  def buildAnnotatedFinalFeatureVector = {
-    val allFeatureVectors = this.makeAnnotatedFeatureClasses
+  def buildAnnotatedFinalFeatureVector(wordSimilarity: Boolean) = {
+    val allFeatureVectors = if (wordSimilarity) this.makeAnnotatedFeatureClasses(wordSimilarity = true) else this.makeAnnotatedFeatureClasses(wordSimilarity = false)
     val featureBuffer = collection.mutable.Buffer[Vector[(String, Double)]]()
 
     for (item <- allFeatureVectors) yield {
@@ -332,7 +332,7 @@ class MachineLearning(
 
   //TODO test
   //TODO add ensemble capability
-  //TODO add NaiveBayes capability
+  //TODO finish adding NaiveBayes capability
   def leaveOneOut(withEnsemble: Boolean = false) = {
     val folderName = this.featuresToInclude.mkString("_")
     val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)         //select proper outside folder based on parameters
