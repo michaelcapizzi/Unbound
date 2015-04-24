@@ -329,10 +329,9 @@ class MachineLearning(
     }
   }
 
-  //TODO adjust file type so that it's not Any
   //TODO add ensemble capability
   //TODO finish adding NaiveBayes capability
-  def leaveOneOut(withEnsemble: Boolean = false)/*: Vector[(String, Vector[(String, String, String)])]*/ = {
+  def leaveOneOut(withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
     val folderName = this.featuresToInclude.mkString("_")
     val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)         //select proper outside folder based on parameters
 
@@ -393,6 +392,7 @@ class MachineLearning(
       }
     }
     if (withEnsemble) {
+      scoreList.asInstanceOf[Vector[(String, Vector[(String, String, String)])]]
       /*
       ////////////////ensemble - voting///////////////////////
 
@@ -400,11 +400,11 @@ class MachineLearning(
     //List(lr, simple, perceptron)
 
   //make collected score list
-  def makeCollectedScoreList(scoreList: List[List[(String, String, String)]]): List[(String, List[String])] = {
-    val titles = scoreList.map(_.map(_._1))
+  def makeCollectedScoreList(mlScoreList: List[List[(String, String, String)]]): List[(String, List[String])] = {
+    val titles = mlScoreList.map(_.map(_._1))
     for (title <- titles(0)) yield
       title ->
-        scoreList.map(scores => scores.find(item => item._1 == title).get).map(_._2)
+        mlScoreList.map(scores => scores.find(item => item._1 == title).get).map(_._2)
   }
 
   //takes a List[title, List[Scores]
@@ -418,7 +418,7 @@ class MachineLearning(
   }
        */
     } else {
-      scoreList
+      scoreList.asInstanceOf[Vector[(String, Vector[(String, String, String)])]]
     }
   }
 

@@ -27,10 +27,10 @@ class StatisticalSignificance(evaluationMetrics: EvaluationMetrics) {
     }
 
     def getComparisonF1(randomComparisonScoreLists: List[List[(String, (String, String, String))]]): List[(Double, Double)] = {
-      randomComparisonScoreLists.map(_.map(item => (item._1, item._2._1, item._2._3))).map(     //makes correct scoreList
+      randomComparisonScoreLists.map(_.map(item => (item._1, item._2._1, item._2._3))).map(     //makes correct mlScoreList
         thing => evaluationMetrics(thing)).map(row => row("Macro")).map(                        //gets to Macro Map
           _.asInstanceOf[Map[String, Double]]).map(each => each("macroF1")) zip                 //gets macroF1s   //zips
-        randomComparisonScoreLists.map(_.map(item => (item._1, item._2._2, item._2._3))).map(     //makes correct scoreList
+        randomComparisonScoreLists.map(_.map(item => (item._1, item._2._2, item._2._3))).map(     //makes correct mlScoreList
           thing => evaluationMetrics(thing)).map(row => row("Macro")).map(                        //gets to Macro Map
             _.asInstanceOf[Map[String, Double]]).map(each => each("macroF1"))                     //gets macroF1s
     }

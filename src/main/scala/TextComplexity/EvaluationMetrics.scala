@@ -6,20 +6,20 @@ import scala.collection.mutable
 /**
  * Created by mcapizzi on 4/17/15.
  */
-class EvaluationMetrics(scoreList: Vector[(String, String, String)]) {
+class EvaluationMetrics(fullScoreList: Vector[(String, Vector[(String, String, String)])]) {
 
-  //Note: must have separate instance for each model used
+  //Note: must have separate instance for each model used --> mlScoreList from machineLearning instance is Vector[(String, Vector[(String, String, String)])]
 
-  //TODO test all
+  //scoreList.map(ml => (ml._1 -> eval.[method](ml._2)))
 
-  val possibleLabels = scoreList.map(_._3).distinct
+  val possibleLabels = fullScoreList.head._2.map(_._3).distinct
 
-  def accuracy = {
+  def accuracy(mlScoreList: Vector[(String, String, String)]) = {
     def isAccurate(mlScore: String, actualScore: String): Int = {
       if (mlScore == actualScore) 1 else 0
     }
 
-    (scoreList.map(item => isAccurate(item._2, item._3)).sum.toDouble / scoreList.length.toDouble) * 100          //sum up correct and divide by total number of items then multiply by 100
+    (mlScoreList.map(item => isAccurate(item._2, item._3)).sum.toDouble / mlScoreList.length.toDouble) * 100          //sum up correct and divide by total number of items then multiply by 100
   }
 
   //TODO build
@@ -28,7 +28,7 @@ class EvaluationMetrics(scoreList: Vector[(String, String, String)]) {
   }
 
 
-  def relevanceLabels = {
+  def relevanceLabels(mlScoreList: Vector[(String, String, String)]): Map[String, Vector[String]] = {
     def determineRelevanceLabels(relevantClass: String, mlScore: String, actualScore: String): String = {
       if (relevantClass == actualScore & relevantClass == mlScore) "truePositive"           //it was relevant, and it was correctly scored as relevant
       else if (relevantClass != actualScore & relevantClass == mlScore) "falsePositive"     //it was irrelevant, but it was incorrectly scored as relevant
@@ -37,33 +37,33 @@ class EvaluationMetrics(scoreList: Vector[(String, String, String)]) {
     }
 
     (for (label <- possibleLabels) yield {                                                      //for every possible label
-      label -> scoreList.map(score => determineRelevanceLabels(label, score._2, score._3))      //generate relevance tags for each item
+      label -> mlScoreList.map(score => determineRelevanceLabels(label, score._2, score._3))      //generate relevance tags for each item
     }).toMap
   }
 
 
-  def recall = {
+  def recall(mlScoreList: Vector[(String, String, String)]) = {
     def calculateRecall(truePositive:Double, falseNegative: Double): Double = {
       if ((truePositive + falseNegative) == 0) 0                                            //in case denominator is 0
       else truePositive / (truePositive + falseNegative)                                    //otherwise calculate recall
     }
 
-    val relevanceLabels = this.relevanceLabels
-    (for (relevance <- relevanceLabels.keySet.toList) yield {
-      relevance -> calculateRecall(relevanceLabels(relevance).count(_.matches("truePositive")).toDouble, relevanceLabels(relevance).count(_.matches("falseNegative")).toDouble)
+    val relevanceLabelsMap = relevanceLabels(mlScoreList)
+    (for (relevance <- relevanceLabelsMap.keySet.toList) yield {
+      relevance -> calculateRecall(relevanceLabelsMap(relevance).count(_.matches("truePositive")).toDouble, relevanceLabelsMap(relevance).count(_.matches("falseNegative")).toDouble)
     }).toMap
   }
 
 
-  def precision = {
+  def precision(mlScoreList: Vector[(String, String, String)]) = {
     def calculatePrecision(truePositive: Double, falsePositive: Double): Double = {
       if ((truePositive + falsePositive) == 0) 0 //in case denominator is 0
       else truePositive / (truePositive + falsePositive) //otherwise calculate recall
     }
 
-    val relevanceLabels = this.relevanceLabels
-    (for (relevance <- relevanceLabels.keySet.toList) yield {
-      relevance -> calculatePrecision(relevanceLabels(relevance).count(_.matches("truePositive")).toDouble, relevanceLabels(relevance).count(_.matches("falsePositive")).toDouble)
+    val relevanceLabelsMap = relevanceLabels(mlScoreList)
+    (for (relevance <- relevanceLabelsMap.keySet.toList) yield {
+      relevance -> calculatePrecision(relevanceLabelsMap(relevance).count(_.matches("truePositive")).toDouble, relevanceLabelsMap(relevance).count(_.matches("falsePositive")).toDouble)
     }).toMap
   }
 
@@ -73,19 +73,21 @@ class EvaluationMetrics(scoreList: Vector[(String, String, String)]) {
     else (2 * precisionScore * recallScore) / (precisionScore + recallScore)              //otherwise calculate recall
   }
 
-  def f1 = {
-    val relevanceLabels = this.relevanceLabels
-    (for (relevance <- relevanceLabels.keySet.toList) yield {
-      relevance -> calculateF1(this.precision(relevance), this.recall(relevance))
+  def f1(mlScoreList: Vector[(String, String, String)]) = {
+    val relevanceLabelsMap = relevanceLabels(mlScoreList)
+    (for (relevance <- relevanceLabelsMap.keySet.toList) yield {
+      val precisionScore = precision(mlScoreList)(relevance)
+      val recallScore = recall(mlScoreList)(relevance)
+      relevance -> calculateF1(precisionScore, recallScore)
     }).toMap
   }
 
-  def macroScores = {
-    val macroPrecision = this.precision.values.toList.sum / possibleLabels.length
-    val macroRecall = this.recall.values.toList.sum / possibleLabels.length
+  def macroScores(mlScoreList: Vector[(String, String, String)]) = {
+    val macroPrecision = precision(mlScoreList: Vector[(String, String, String)]).values.toList.sum / possibleLabels.length
+    val macroRecall = recall(mlScoreList: Vector[(String, String, String)]).values.toList.sum / possibleLabels.length
     Map(
       "macroPrecision" -> macroPrecision,
-      "macrosRecall" -> macroRecall,
+      "macroRecall" -> macroRecall,
       "macroF1" -> calculateF1(macroPrecision, macroRecall)
     )
   }
@@ -99,6 +101,9 @@ class EvaluationMetrics(scoreList: Vector[(String, String, String)]) {
 
 
 
+  def fullEvaluation(mlScoreList: Vector[(String, String, String)]) = {
+
+  }
 
 
 
