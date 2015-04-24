@@ -21,8 +21,8 @@ Lexical Features | Syntactic Features | Paragraph Features
  | % of compound-complex sentences in text |
  | % of fragments in text |
  
- * = easily normalized
- ** = not easily normalized
+ \* = easily normalized
+ \** = not easily normalized
  
  Performance
  ---------------------

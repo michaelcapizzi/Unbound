@@ -157,7 +157,7 @@ class SyntacticFeatures(val textDocument: TextDocument) {
       )
   }
 
-  //TODO adjust to calculate for sentence -- add word similarity vectors elementwise within a sentence
+  /*//TODO adjust to calculate for sentence -- add word similarity vectors elementwise within a sentence
   def getWordSimilaritySentenceScores = {
     val importantWords = for (sentence <- textDocument.lexicalTupleInSentences) yield {
         sentence.filter(word => word._2._2.matches("NN.*") || word._2._2.matches("VB.*") || word._2._2.matches("JJ.*") || word._2._2.matches("RB.*")).    //keep *only important POS
@@ -232,7 +232,7 @@ class SyntacticFeatures(val textDocument: TextDocument) {
       "75th %ile similarity sentence score" -> stat.getPercentile(75),
       "maximum similarity sentence score" -> stat.getMax
       )
-  }
+  }*/
 
  //Tregex patterns
   //modified from http://personal.psu.edu/xxl13/papers/Lu_inpress_ijcl.pdf
@@ -311,7 +311,7 @@ class SyntacticFeatures(val textDocument: TextDocument) {
       )
   }
 
-  def makeSyntacticFeatureVector = {
+  /*def makeSyntacticFeatureVector = {
     Vector(
         (textDocument.title, textDocument.title),
         (textDocument.gradeLevel, textDocument.gradeLevel),
@@ -365,9 +365,9 @@ class SyntacticFeatures(val textDocument: TextDocument) {
         ("% of compound-complex sentences", this.sentenceStructureTypeStats("ratio of compound-complex sentences")),
         ("% of fragments", this.sentenceStructureTypeStats("ratio of fragments"))
       )
-  }
+  }*/
 
-  def makeSyntacticMinusSimilarityFeatureVector = {
+  def makeSyntacticFeatureVector = {
     Vector(
       (textDocument.title, textDocument.title),
       (textDocument.gradeLevel, textDocument.gradeLevel),
@@ -417,7 +417,7 @@ class SyntacticFeatures(val textDocument: TextDocument) {
     )
   }
 
-  def similarityFeatureVector = {
+  /*def similarityFeatureVector = {
     Vector(
       ("minimum word similarity sentence score", this.wordSimilaritySentenceScoreStats("minimum similarity sentence score")),
       ("25th %ile word similarity sentence score", this.wordSimilaritySentenceScoreStats("25th %ile similarity sentence score")),
@@ -426,5 +426,5 @@ class SyntacticFeatures(val textDocument: TextDocument) {
       ("75th %ile similarity sentence score", this.wordSimilaritySentenceScoreStats("75th %ile similarity sentence score")),
       ("maximum similarity sentence score", this.wordSimilaritySentenceScoreStats("maximum similarity sentence score"))
     )
-  }
+  }*/
 }

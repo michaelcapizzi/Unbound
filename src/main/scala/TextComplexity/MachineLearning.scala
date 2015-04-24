@@ -23,6 +23,9 @@ class MachineLearning(
                        val textToTestFilePath: String = ""
                        ) {
 
+  //TODO run other single models
+  //TODO reset classifier with only three classes
+
   val rawFile = new File(rawTextFileFolder)
   val annotatedFile = new File(annotatedTextFileFolder)
   //val featureVectorFile = new File(featureVectorFileFolder)
@@ -37,7 +40,7 @@ class MachineLearning(
 
   //load annotated files from folder and make TextDocument for each
   def importAnnotatedMakeDocuments = {
-    val tuple = for (file <- rawFile.listFiles) yield {                                                                                           //get a list of raw files and annotated files
+    val tuple = for (file <- rawFile.listFiles) yield {                                        //get a list of raw files and annotated files
       val fileName = file.getName.dropRight(file.getName.length - file.getName.indexOf("."))
       (                                                                                                                                             //make tuple of
         file,                                                                                                                                         //rawFile
@@ -62,8 +65,10 @@ class MachineLearning(
       val syntactic = new SyntacticFeatures(item)
       val paragraph = new ParagraphFeatures(item)
 
-      val lexicalFeatures = lexical.makeLexicalFeatureVector
-      val syntacticFeatures = if (wordSimilarity) syntactic.makeSyntacticFeatureVector else syntactic.makeSyntacticMinusSimilarityFeatureVector
+      val lexicalFeatures = if (wordSimilarity) lexical.makeLexicalFeatureVector else lexical.makeLexicalFeatureMinusWordSimilarityVector
+      //val lexicalFeatures = lexical.makeLexicalFeatureVector
+      //val syntacticFeatures = if (wordSimilarity) syntactic.makeSyntacticFeatureVector else syntactic.makeSyntacticMinusSimilarityFeatureVector
+      val syntacticFeatures = syntactic.makeSyntacticFeatureVector
       val paragraphFeatures = paragraph.makeParagraphFeatureVector
 
       (
@@ -114,8 +119,10 @@ class MachineLearning(
       val syntactic = new SyntacticFeatures(item)
       val paragraph = new ParagraphFeatures(item)
 
-      val lexicalFeatures = lexical.makeLexicalFeatureVector
-      val syntacticFeatures = if (wordSimilarity) syntactic.makeSyntacticFeatureVector else syntactic.makeSyntacticMinusSimilarityFeatureVector
+      val lexicalFeatures = if (wordSimilarity) lexical.makeLexicalFeatureVector else lexical.makeLexicalFeatureMinusWordSimilarityVector
+      //val lexicalFeatures = lexical.makeLexicalFeatureVector
+      //val syntacticFeatures = if (wordSimilarity) syntactic.makeSyntacticFeatureVector else syntactic.makeSyntacticMinusSimilarityFeatureVector
+      val syntacticFeatures = syntactic.makeSyntacticFeatureVector
       val paragraphFeatures = paragraph.makeParagraphFeatureVector
 
       (
@@ -134,8 +141,10 @@ class MachineLearning(
     val syntactic = new SyntacticFeatures(doc)
     val paragraph = new ParagraphFeatures(doc)
 
-    val lexicalFeatures = lexical.makeLexicalFeatureVector
-    val syntacticFeatures = if (wordSimilarity) syntactic.makeSyntacticFeatureVector else syntactic.makeSyntacticMinusSimilarityFeatureVector
+    val lexicalFeatures = if (wordSimilarity) lexical.makeLexicalFeatureVector else lexical.makeLexicalFeatureMinusWordSimilarityVector
+    //val lexicalFeatures = lexical.makeLexicalFeatureVector
+    //val syntacticFeatures = if (wordSimilarity) syntactic.makeSyntacticFeatureVector else syntactic.makeSyntacticMinusSimilarityFeatureVector
+    val syntacticFeatures = syntactic.makeSyntacticFeatureVector
     val paragraphFeatures = paragraph.makeParagraphFeatureVector
 
     (
@@ -329,8 +338,7 @@ class MachineLearning(
     }
   }
 
-  //TODO add ensemble capability
-  //TODO test NaiveBaye
+  //TODO test NaiveBayes
   def leaveOneOut(withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
     val folderName = this.featuresToInclude.mkString("_")
     val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)         //select proper outside folder based on parameters
@@ -389,35 +397,7 @@ class MachineLearning(
         )
       }
     }
-    if (withEnsemble) {
-      scoreList.asInstanceOf[Vector[(String, Vector[(String, String, String)])]]
-      /*
-      ////////////////ensemble - voting///////////////////////
-
-  //put all scores in a list:
-    //List(lr, simple, perceptron)
-
-  //make collected score list
-  def makeCollectedScoreList(mlScoreList: List[List[(String, String, String)]]): List[(String, List[String])] = {
-    val titles = mlScoreList.map(_.map(_._1))
-    for (title <- titles(0)) yield
-      title ->
-        mlScoreList.map(scores => scores.find(item => item._1 == title).get).map(_._2)
-  }
-
-  //takes a List[title, List[Scores]
- def ensembleVoting(scores: List[(String, List[String])], tieBreakerIndex: Int): List[(String, String)] = {
-    for (score <- scores) yield (score._1, {
-      val record = score._2.groupBy(item => item).values.toList.map(thing => thing(0) -> thing.length).toMap
-      if (record.values.toList.length == scores.map(_._2).length) score._2(tieBreakerIndex)
-      else record.maxBy(_._2)._1
-      }
-      )
-  }
-       */
-    } else {
-      scoreList.asInstanceOf[Vector[(String, Vector[(String, String, String)])]]
-    }
+    scoreList.asInstanceOf[Vector[(String, Vector[(String, String, String)])]]
   }
 
   def getWeights = {
