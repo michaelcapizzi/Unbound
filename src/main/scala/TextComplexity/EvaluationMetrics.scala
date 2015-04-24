@@ -45,16 +45,19 @@ class EvaluationMetrics(fullScoreList: Vector[(String, Vector[(String, String, S
     }
   }
 
+  /*
   //TODO build
-  def distanceAccuracyHistogram(mlScoreList: Vector[(String, String, String)]) = {
-    val distanceAccuracyScores = this.distanceAccuracy(mlScoreList: Vector[(String, String, String)])
-
-  }
-
-  //TODO build
-  def distanceAccuracyTotals(mlScoreList: Vector[(String, String, String)]) = {
+  def distanceAccuracyLabelHistogram(mlScoreList: Vector[(String, String, String)]) = {
     val distanceAccuracyHistogram = this.distanceAccuracyHistogram(mlScoreList: Vector[(String, String, String)])
 
+  }*/
+
+  def distanceAccuracyTotalHistogram(mlScoreList: Vector[(String, String, String)]) = {
+    val distanceAccuracyScores = this.distanceAccuracy(mlScoreList: Vector[(String, String, String)])
+
+    for (distance <- distanceAccuracyScores.map(_._2).distinct.sorted) yield {
+      distance -> distanceAccuracyScores.count(_._2 == distance)
+    }
   }
 
 
@@ -128,12 +131,6 @@ class EvaluationMetrics(fullScoreList: Vector[(String, Vector[(String, String, S
   //metrics(key) --> will yield you an Any of all three
   //to go deeper
   //metrics(key).asInstanceOf[Map[???]](key)
-
-
-
-  def fullEvaluation(mlScoreList: Vector[(String, String, String)]) = {
-    //
-  }
 
 
 

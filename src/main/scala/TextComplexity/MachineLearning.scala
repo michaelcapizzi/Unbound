@@ -422,6 +422,12 @@ class MachineLearning(
     }
   }
 
+  def getWeights = {
+    //what does Perceptron give?
+    //what does Random Forest give?
+    //what to use for NaiveBayes? anything?
+  }
+
   /*//TODO build using Counters (see UsingCountersDatums)
   def fullTrainAndTest = {
     val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"
