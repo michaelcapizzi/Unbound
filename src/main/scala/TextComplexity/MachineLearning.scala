@@ -146,7 +146,7 @@ class MachineLearning(
     )
   }
 
-
+  //TODO paramterize
   def convertLabel(label: String): String = {
     label match {
       case "0001" => "0"
@@ -158,6 +158,7 @@ class MachineLearning(
     }
   }
 
+  //TODO paramterize
   def revertLabel(label: Int): String = {
     label match {
       case 0 => "0001"
@@ -206,7 +207,7 @@ class MachineLearning(
     }
 
     val svmFile = toSVM(featureBuffer)
-    val featureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "similarity.master" else this.featuresToInclude.mkString("_") + ".master"
+    val featureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "_similarity.master" else this.featuresToInclude.mkString("_") + ".master"
     val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
     svmFile.map(line => pw.println(line))
     pw.close
@@ -256,7 +257,6 @@ class MachineLearning(
   }
   */
 
-  //TODO figure out why item #54 of lexical_syntactic_paragraph.master has no title
   //builds svmLight feature vector
   def buildAnnotatedFinalFeatureVector(wordSimilarity: Boolean) = {
     val allFeatureVectors = if (wordSimilarity) this.makeAnnotatedFeatureClasses(wordSimilarity = true) else this.makeAnnotatedFeatureClasses(wordSimilarity = false)
@@ -293,15 +293,14 @@ class MachineLearning(
     }
 
     val svmFile = toSVM(featureBuffer)
-    val featureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "similarity.master" else this.featuresToInclude.mkString("_") + ".master"
+    val featureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "_similarity.master" else this.featuresToInclude.mkString("_") + ".master"
     val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
     svmFile.map(line => pw.println(line))
     pw.close
   }
 
-  //TODO test
-  def buildLeaveOneOutSVMFiles = {
-    val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"                                                        //find .master file based on parameters
+  def buildLeaveOneOutSVMFiles(wordSimilarity: Boolean) = {
+    val featureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "_similarity.master" else this.featuresToInclude.mkString("_") + ".master"   //find .master file based on parameters
     val folderName = featureVectorFileName.dropRight(7)                                                                                 //name folder after parameters
     val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)                           //make new folder
     outsideFolder.mkdir()                                                                                                                   //create directory
@@ -313,27 +312,27 @@ class MachineLearning(
       val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.drop(i + 1)    //lines for training AFTER testing line
       val train = (trainBeforeTest ++ trainAfterTest).toVector                                                                                                          //concatenated training lines
 
-      val insideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + (i + 1).toString)                                                //name of inside folder
+      val insideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder.getName + "/" + (i + 1).toString)                                                //name of inside folder
       insideFolder.mkdir()
 
-      val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + insideFolder + "/" + (i + 1).toString + "/" + (i + 1).toString + ".train"))
+      val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder.getName + "/" + insideFolder.getName + "/" + (i + 1).toString + ".train"))
       //val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + (i + 1).toString + ".train"))
-      val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + insideFolder + "/" + (i + 1).toString + "/" + (i + 1).toString + ".test"))
+      val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder.getName + "/" + insideFolder.getName + "/" + (i + 1).toString + ".test"))
       //val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + (i + 1).toString + ".test"))
 
       train.map(line => pwTrain.println(line))
       pwTrain.close
 
-      test.map(line => pwTest.println(line))
+      pwTest.println(test)
       pwTest.close
 
     }
   }
 
-  //TODO test
+  //TODO adjust file type so that it's not Any
   //TODO add ensemble capability
   //TODO finish adding NaiveBayes capability
-  def leaveOneOut(withEnsemble: Boolean = false) = {
+  def leaveOneOut(withEnsemble: Boolean = false)/*: Vector[(String, Vector[(String, String, String)])]*/ = {
     val folderName = this.featuresToInclude.mkString("_")
     val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)         //select proper outside folder based on parameters
 
@@ -370,7 +369,7 @@ class MachineLearning(
 
         (
           model,                                                                            //classifier name
-          for (insideFolder <- outsideFolder.listFiles) yield {
+          (for (insideFolder <- outsideFolder.listFiles) yield {
             //for each subfolder
             val train = insideFolder.listFiles.find(fileName => fileName.getName.contains("train")).get             //get train file
             val test = insideFolder.listFiles.find(fileName => fileName.getName.contains("test")).get               //get test file
@@ -380,7 +379,7 @@ class MachineLearning(
 
             classifier.train(trainDataSet)
 
-            val titleRegex = """#(.*)""".r
+            val titleRegex = """.+#(.*)""".r
             val line = Source.fromFile(test).getLines.toVector.head
             val title = titleRegex.replaceFirstIn(line, """$1""")
 
@@ -389,7 +388,7 @@ class MachineLearning(
               revertLabel(classifier.classOf(testDataSet.head)),                            //mlScore
               revertLabel(testDataSet.head.label)                                           //actualScore
               )
-          }
+          }).toVector
         )
       }
     }
