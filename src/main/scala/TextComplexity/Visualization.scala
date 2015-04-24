@@ -14,7 +14,8 @@ object Visualization {
 
   //help()
 
-  //TODO test
+  //lowest chart is first model used
+  //TODO confirm accuracy scores is in blue
   def makeAccuracyPie(scoreList: Vector[(String, Vector[(String, String, String)])]) = {
     val eval = new EvaluationMetrics(scoreList)
     val accuracyScores = scoreList.map(ml => eval.accuracy(ml._2))
@@ -22,15 +23,15 @@ object Visualization {
     for (ml <- accuracyScores) yield {
       pie(
         List(
-              100 - ml,       //accuracy score
-              ml              //remainder
+              ml,                   //remainder
+              100 - ml              //accuracy score
         )
       )
       title("Accuracy (in blue)")
     }
   }
 
-  //TODO test
+  //lowest chart is first model used
   def makeDistanceHistogram(scoreList: Vector[(String, Vector[(String, String, String)])]) = {
     val eval = new EvaluationMetrics(scoreList)
     val distances = scoreList.map(ml => eval.distanceAccuracy(ml._2).map(_._2))
@@ -41,7 +42,7 @@ object Visualization {
     }
   }
 
-  //TODO test
+  //TODO figure out why legend isn't working
   def makePRF1Chart(scoreList: Vector[(String, Vector[(String, String, String)])]) = {
     val eval = new EvaluationMetrics(scoreList)
     val macroScores = scoreList.map(ml => eval.macroScores(ml._2))
@@ -49,11 +50,13 @@ object Visualization {
     column(macroScores.map(each => each("macroPrecision")))
     hold
     column(macroScores.map(each => each("macroRecall")))
+    hold
     column(macroScores.map(each => each("macroF1")))
+    legend(List("precision", "recall", "F1"))
     xAxisType("category")
     xAxis("ML model")
     yAxis("Scores")
-    legend(List("precision", "recall", "F1"))
+    unhold
   }
 
 
