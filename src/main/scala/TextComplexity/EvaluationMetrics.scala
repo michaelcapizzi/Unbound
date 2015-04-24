@@ -1,5 +1,7 @@
 package TextComplexity
 
+import scala.math._
+
 import scala.util.Random._
 import scala.collection.mutable
 
@@ -22,9 +24,37 @@ class EvaluationMetrics(fullScoreList: Vector[(String, Vector[(String, String, S
     (mlScoreList.map(item => isAccurate(item._2, item._3)).sum.toDouble / mlScoreList.length.toDouble) * 100          //sum up correct and divide by total number of items then multiply by 100
   }
 
+  def distanceAccuracy(mlScoreList: Vector[(String, String, String)]) = {
+    def convertLabel(label: String): Int = {
+      label match {
+        case "0001" => 0
+        case "0203" => 1
+        case "0405" => 2
+        case "0608" => 3
+        case "0910" => 4
+        case "1112" => 5
+      }
+    }
+
+    def calculateDistance(mlScore: Int, actualScore: Int): Int = {
+      mlScore - actualScore
+    }
+
+    for (score <- mlScoreList) yield {
+      score._1 -> calculateDistance(convertLabel(score._2), convertLabel(score._3))
+    }
+  }
+
   //TODO build
-  def distanceAccuracy = {
-    //score of +/- 1,2,3 representing how far off
+  def distanceAccuracyHistogram(mlScoreList: Vector[(String, String, String)]) = {
+    val distanceAccuracyScores = this.distanceAccuracy(mlScoreList: Vector[(String, String, String)])
+
+  }
+
+  //TODO build
+  def distanceAccuracyTotals(mlScoreList: Vector[(String, String, String)]) = {
+    val distanceAccuracyHistogram = this.distanceAccuracyHistogram(mlScoreList: Vector[(String, String, String)])
+
   }
 
 
@@ -102,7 +132,7 @@ class EvaluationMetrics(fullScoreList: Vector[(String, Vector[(String, String, S
 
 
   def fullEvaluation(mlScoreList: Vector[(String, String, String)]) = {
-
+    //
   }
 
 
