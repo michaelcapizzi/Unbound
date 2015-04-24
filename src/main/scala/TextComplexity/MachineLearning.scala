@@ -256,7 +256,7 @@ class MachineLearning(
   }
   */
 
-  //TODO test convertLabel on just lexical and test
+  //TODO figure out why item #54 of lexical_syntactic_paragraph.master has no title
   //builds svmLight feature vector
   def buildAnnotatedFinalFeatureVector(wordSimilarity: Boolean) = {
     val allFeatureVectors = if (wordSimilarity) this.makeAnnotatedFeatureClasses(wordSimilarity = true) else this.makeAnnotatedFeatureClasses(wordSimilarity = false)
