@@ -330,7 +330,7 @@ class MachineLearning(
   }
 
   //TODO add ensemble capability
-  //TODO finish adding NaiveBayes capability
+  //TODO test NaiveBayes
   def leaveOneOut(withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
     val folderName = this.featuresToInclude.mkString("_")
     val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)         //select proper outside folder based on parameters
@@ -341,18 +341,16 @@ class MachineLearning(
         val allDocs = this.importAnnotatedMakeDocuments                       //get all documents
         (
           "naiveBayes",
-          for (document <- allDocs) yield {                                     //for each document...
+          (for (document <- allDocs) yield {                                     //for each document...
             val test = Vector(document)                                             //make it test
             val train = allDocs.filterNot(_ == document).toVector                   //and all other docs part of train
             val nb = new NaiveBayes(train, test, Vector(), 0, 0, 0)
-
-            /*(
-              //title,
-              nb.argMax,      //mlScore
-              document.label  //actualScore
-            )*/
-
-          }
+            (
+              document.title,       //title
+              nb.argMax,            //mlScore
+              document.gradeLevel   //actualScore
+            )
+          }).toVector
         )
 
       } else {

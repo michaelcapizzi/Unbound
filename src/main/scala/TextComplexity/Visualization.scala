@@ -14,6 +14,49 @@ object Visualization {
 
   //help()
 
+  //TODO test
+  def makeAccuracyPie(scoreList: Vector[(String, Vector[(String, String, String)])]) = {
+    val eval = new EvaluationMetrics(scoreList)
+    val accuracyScores = scoreList.map(ml => eval.accuracy(ml._2))
+
+    for (ml <- accuracyScores) yield {
+      pie(
+        List(
+              100 - ml,       //accuracy score
+              ml              //remainder
+        )
+      )
+      title("Accuracy (in blue)")
+    }
+  }
+
+  //TODO test
+  def makeDistanceHistogram(scoreList: Vector[(String, Vector[(String, String, String)])]) = {
+    val eval = new EvaluationMetrics(scoreList)
+    val distances = scoreList.map(ml => eval.distanceAccuracy(ml._2).map(_._2))
+
+    for (ml <- distances) yield {
+      histogram(ml, ml.distinct.length - 1)
+      title("Distance from correct label")
+    }
+  }
+
+  //TODO test
+  def makePRF1Chart(scoreList: Vector[(String, Vector[(String, String, String)])]) = {
+    val eval = new EvaluationMetrics(scoreList)
+    val macroScores = scoreList.map(ml => eval.macroScores(ml._2))
+
+    column(macroScores.map(each => each("macroPrecision")))
+    hold
+    column(macroScores.map(each => each("macroRecall")))
+    column(macroScores.map(each => each("macroF1")))
+    xAxisType("category")
+    xAxis("ML model")
+    yAxis("Scores")
+    legend(List("precision", "recall", "F1"))
+  }
+
+
   //graph type
   //title("blah")
   //xAxis("blah")
@@ -26,15 +69,18 @@ object Visualization {
   //histogram
   //histogram(distances, distances.distinct.length-1)
 
-  //bar chart
-  //bar(List([all precision scores])
+  //column chart
+  //column(List([all precision scores])
   //hold
-  //bar(List([all recall scores])
+  //column(List([all recall scores])
   //hold
-  //bar(List([all f1 scores])
+  //column(List([all f1 scores])
+  //xAxisType("category")
   //xAxis("model")
   //yAxis("score")
   //legend(List("precision", "recall", "f1"))
+
+  //how to change 0, 1 to model name?
 
 
 }
