@@ -29,15 +29,15 @@ Lexical Features | Syntactic Features | Paragraph Features
  
  Features Used | Model Used | Accuracy | Precision | Recall | F1
  ---|---|---|---|---|---
- - | Perceptron | 29.6% | .05 | .17 | .08
+ -- | Perceptron | 29.6% | .05 | .17 | .08
  Lexical | Logistic Regression | 29.6% | .16 | .21 | .18
- - | Random Forest | 42.6% | .45 | .43 | .44
- - | Perceptron | 31.5% | .13 | .18 | .15
+ -- | Random Forest | 42.6% | .45 | .43 | .44
+ -- | Perceptron | 31.5% | .13 | .18 | .15
  Lex + Syn | Logistic Regression | 29.6% | .24 | .28 | .26
- - | Random Forest | 27.7% | .16 | .20 | .18
- - | Perceptron | 27.7% | .05 | .16 | .08
+ -- | Random Forest | 27.7% | .16 | .20 | .18
+ -- | Perceptron | 27.7% | .05 | .16 | .08
  Lex + Syn + Par | Logistic Regression | 31.5% | .32 | .30 | .31
- - | Random Forest | 25.9% | .13 | .19 | .15
+ -- | Random Forest | 25.9% | .13 | .19 | .15
  
 
  
