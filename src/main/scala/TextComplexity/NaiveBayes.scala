@@ -44,10 +44,10 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
 
   //concatenate all documents for each class into one document
   def makeDocumentsConcatenized = {
-    (for (possibleClass <- possibleClasses) yield {                                    //for each class
-      possibleClass -> trainingData.filter(doc => doc.gradeLevel == possibleClass).map(                  //take the documents of that class
-        textDocument => textDocument.getWords.map(_.toLowerCase)).flatten.               //get words, put to lowercase, and flatten
-        diff(stopWords)                                                                  //filter out stop words
+    (for (possibleClass <- possibleClasses) yield {                                       //for each class
+      possibleClass -> trainingData.filter(doc => doc.gradeLevel == possibleClass).map(     //take the documents of that class
+        textDocument => textDocument.getWords.map(_.toLowerCase)).flatten.                  //get words, put to lowercase, and flatten
+        diff(stopWords)                                                                     //filter out stop words
     }).toMap
   }
 

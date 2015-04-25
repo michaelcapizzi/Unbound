@@ -216,7 +216,7 @@ class LexicalFeatures(val textDocument: TextDocument) {
           }
         }
       println("elementwise adding word similarities")
-      foldElementwiseSum(sentenceSimilarities) / sentenceSimilarities.length.toDouble                     //elementwise add vectors for the sentence normalized over # of words in the sentence
+      if (sentenceSimilarities.isEmpty) SparseVector.zeros[Double](200) else foldElementwiseSum(sentenceSimilarities) / sentenceSimilarities.length.toDouble                     //elementwise add vectors for the sentence normalized over # of words in the sentence
     }
     for (sentence <- sentenceVectors) yield {                                                                                               //for every sentence vector in the text
       val window = sentenceVectors.slice(sentenceVectors.indexOf(sentence) - 5, sentenceVectors.indexOf(sentence) + 6)                      //build a window of +/- 5 sentences

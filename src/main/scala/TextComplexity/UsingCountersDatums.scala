@@ -1,7 +1,7 @@
 package TextComplexity
 
 import edu.arizona.sista.learning.{RVFDatum, Datum}
-import edu.arizona.sista.struct.Counter
+import edu.arizona.sista.struct.{Lexicon, Counter}
 
 /**
  * Created by mcapizzi on 4/7/15.
@@ -25,6 +25,12 @@ object UsingCountersDatums {
   tuple.map(each => counter.setCount(each._1, each._2))
 
   //make a label
+
+  //use Lexicon
+  val lex = new Lexicon[String]
+
+  list.map(lex.add)
+
 
   //make the datum with those things defined in curly brackets
   val datum = new Datum[String, String] {
