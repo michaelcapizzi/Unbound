@@ -19,16 +19,13 @@ class MachineLearning(
                        val featuresToInclude: Vector[String],       //required
                        val modelsToUse: Vector[String],             //required
                        val rawTextFileFolder: String = "",
-                       //val featureVectorFileFolder: String = "",
                        val textToTestFilePath: String = ""
                        ) {
 
-  //TODO run other single models
   //TODO reset classifier with only three classes
 
   val rawFile = new File(rawTextFileFolder)
   val annotatedFile = new File(annotatedTextFileFolder)
-  //val featureVectorFile = new File(featureVectorFileFolder)
 
   //load raw files from folder and make TextDocument for each
   def importRawMakeDocuments = {

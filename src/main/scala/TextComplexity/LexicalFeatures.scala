@@ -123,7 +123,7 @@ class LexicalFeatures(val textDocument: TextDocument) {
   }
 
   //calculates similarity score for every word compared to every other word in EACH SENTENCE
-  /*def getWordSimilaritySentenceScores = {
+  def getWordSimilaritySentenceScores = {
     val importantWords = for (sentence <- textDocument.lexicalTupleInSentences) yield {
       sentence.filter(word => word._2._2.matches("NN.*") || word._2._2.matches("VB.*") || word._2._2.matches("JJ.*") || word._2._2.matches("RB.*")).    //keep *only important POS
         filterNot(entity => (entity._2._3.matches("PERSON") || entity._2._3.matches("LOCATION")) && entity._2._1.matches("[A-Z]")).                     //drop proper nouns
@@ -183,11 +183,10 @@ class LexicalFeatures(val textDocument: TextDocument) {
       val summedSentenceSimilarities = sentenceSimilarities.map(wordLevel => wordLevel.sum / wordLevel.length.toDouble)     //take similarity score for each word divided by number of words
       if (summedSentenceSimilarities.isEmpty) 0.0 else summedSentenceSimilarities.min                   //take the least similar score from the sentence
     }
-  }*/
+  }
 
   //calculates word similarity for a SENTENCE and comapres it to every other sentence IN THE PARAGRAPH
-  /*//TODO adjust to calculate for sentence -- add word similarity vectors elementwise within a sentence and then compare sentences
-  def getWordSimilaritySentenceScores1 = {
+  def getWordSimilarityDocumentScores = {
     val importantWords = for (sentence <- textDocument.lexicalTupleInSentences) yield {
       sentence.filter(word => word._2._2.matches("NN.*") || word._2._2.matches("VB.*") || word._2._2.matches("JJ.*") || word._2._2.matches("RB.*")). //keep *only important POS
         filterNot(entity => (entity._2._3.matches("PERSON") || entity._2._3.matches("LOCATION")) && entity._2._1.matches("[A-Z]")). //drop proper nouns
@@ -195,34 +194,41 @@ class LexicalFeatures(val textDocument: TextDocument) {
     }
 
     import scala.collection.mutable.Map
-    val similarityHashMap = Map[String, Array[Double]]() //build mutable map to house previously looked up similarity vectors
+    val similarityHashMap = Map[String, SparseVector[Double]]() //build mutable map to house previously looked up similarity vectors
 
     val sentenceVectors = for (sentence <- importantWords) yield {                                        //for each sentence
       val sentenceSimilarities =
         for (word <- sentence) yield {
-          if (similarityHashMap.contains(word)) {
-            val wordVector = SparseVector(similarityHashMap(word))                                        //access the word vector
+          if (sentence.length < 2) SparseVector.zeros[Double](200)
+          else if (similarityHashMap.contains(word)) {
+            println("accessing " + word)
+            similarityHashMap(word)                                                                      //access the word vector
           } else {
+            println("finding " + word)
             val wordVector = SparseVector(Source.fromFile(                                                //build the word vector
               "/home/mcapizzi/Github/Unbound/src/main/resources/wordSimilarityData.txt").getLines.
               find(line => line.startsWith(word)).map(_.                                                  //find the vector in the text file
               split(" ").drop(1)).                                                                        //split and drop word (leaving just numbers)
               toArray.flatten.map(_.toDouble))
-            similarityHashMap(word) = wordVector.toArray                                                  //add it to hash map
+            println("adding " + word)
+            similarityHashMap(word) = if (wordVector.size == 0) SparseVector.zeros[Double](200) else wordVector     //add it to hash map
+            similarityHashMap(word)
           }
         }
-      //elementwise add all vectors in sentence Similarities / # of words in sentence contributing vectors
+      println("elementwise adding word similarities")
+      foldElementwiseSum(sentenceSimilarities) / sentenceSimilarities.length.toDouble                     //elementwise add vectors for the sentence normalized over # of words in the sentence
     }
-    //run wordSimilarityVector on each sentence combination
+    for (sentence <- sentenceVectors) yield {                                                                                               //for every sentence vector in the text
+      val window = sentenceVectors.slice(sentenceVectors.indexOf(sentence) - 5, sentenceVectors.indexOf(sentence) + 6)                      //build a window of +/- 5 sentences
+      val windowIndivScore = for (sentence2 <- window.filterNot(item => window.indexOf(item) == window.indexOf(sentence))) yield {            //calculate similarity score against each other sentence in window
+        println("calculating similarity of sentences in window")
+        wordSimilarityVector(sentence, sentence2)
+      }
+      windowIndivScore.sum / windowIndivScore.length.toDouble                                                                                 //normalize over number of vectors used
+    }
+  }
 
-    //do I need this below?
-    /*
-      val summedSentenceSimilarities = sentenceSimilarities.map(wordLevel => wordLevel.sum / wordLevel.length.toDouble)     //take similarity score for each word divided by number of words
-      if (summedSentenceSimilarities.isEmpty) 0.0 else summedSentenceSimilarities.min                   //take the least similar score from the sentence
-  */
-  }*/
-
-  /*def wordSimilaritySentenceScoreStats = {
+  def wordSimilaritySentenceScoreStats = {
     val stat = new DescriptiveStatistics()
     this.getWordSimilaritySentenceScores.map(stat.addValue)            //count
 
@@ -234,7 +240,21 @@ class LexicalFeatures(val textDocument: TextDocument) {
       "75th %ile similarity sentence score" -> stat.getPercentile(75),
       "maximum similarity sentence score" -> stat.getMax
     )
-  }*/
+  }
+
+  def wordSimilarityDocumentScoreStats = {
+    val stat = new DescriptiveStatistics()
+    this.getWordSimilarityDocumentScores.map(stat.addValue)            //count
+
+    Map(
+      "minimum similarity sentence score" -> stat.getMin,
+      "25th %ile similarity sentence score" -> stat.getPercentile(25),
+      "mean similarity sentence score" -> stat.getMean,
+      "median similarity sentence score" -> stat.getPercentile(50),
+      "75th %ile similarity sentence score" -> stat.getPercentile(75),
+      "maximum similarity sentence score" -> stat.getMax
+    )
+  }
 
   def makeLexicalFeatureVector = {
     Vector(
@@ -252,13 +272,13 @@ class LexicalFeatures(val textDocument: TextDocument) {
       ("75th %ile concreteness score present in text", this.wordConcretenessStats("75th %ile concreteness score present in text")),
       ("concreteness score of most used noun", this.wordConcretenessStats("concreteness score of most used noun")),
       ("concreteness score of most used verb", this.wordConcretenessStats("concreteness score of most used verb")),
-      ("concreteness score of most used adjective", this.wordConcretenessStats("concreteness score of most used adjective"))/*,
-      ("minimum word similarity sentence score", this.wordSimilaritySentenceScoreStats("minimum similarity sentence score")),
-      ("25th %ile word similarity sentence score", this.wordSimilaritySentenceScoreStats("25th %ile similarity sentence score")),
-      ("mean word similarity sentence score", this.wordSimilaritySentenceScoreStats("mean similarity sentence score")),
-      ("median word similarity sentence score", this.wordSimilaritySentenceScoreStats("median similarity sentence score")),
-      ("75th %ile similarity sentence score", this.wordSimilaritySentenceScoreStats("75th %ile similarity sentence score")),
-      ("maximum similarity sentence score", this.wordSimilaritySentenceScoreStats("maximum similarity sentence score"))*/
+      ("concreteness score of most used adjective", this.wordConcretenessStats("concreteness score of most used adjective")),
+      ("minimum word similarity sentence score", this.wordSimilarityDocumentScoreStats("minimum similarity sentence score")),
+      ("25th %ile word similarity sentence score", this.wordSimilarityDocumentScoreStats("25th %ile similarity sentence score")),
+      ("mean word similarity sentence score", this.wordSimilarityDocumentScoreStats("mean similarity sentence score")),
+      ("median word similarity sentence score", this.wordSimilarityDocumentScoreStats("median similarity sentence score")),
+      ("75th %ile similarity sentence score", this.wordSimilarityDocumentScoreStats("75th %ile similarity sentence score")),
+      ("maximum similarity sentence score", this.wordSimilarityDocumentScoreStats("maximum similarity sentence score"))
     )
   }
 
@@ -282,7 +302,7 @@ class LexicalFeatures(val textDocument: TextDocument) {
     )
   }
 
-  /*def similarityFeatureVector = {
+  def similaritySentenceFeatureVector = {
       Vector(
         ("minimum word similarity sentence score", this.wordSimilaritySentenceScoreStats("minimum similarity sentence score")),
         ("25th %ile word similarity sentence score", this.wordSimilaritySentenceScoreStats("25th %ile similarity sentence score")),
@@ -291,6 +311,17 @@ class LexicalFeatures(val textDocument: TextDocument) {
         ("75th %ile similarity sentence score", this.wordSimilaritySentenceScoreStats("75th %ile similarity sentence score")),
         ("maximum similarity sentence score", this.wordSimilaritySentenceScoreStats("maximum similarity sentence score"))
       )
-    }*/
+    }
+
+  def similarityDocumentFeatureVector = {
+    Vector(
+      ("minimum word similarity sentence score", this.wordSimilarityDocumentScoreStats("minimum similarity sentence score")),
+      ("25th %ile word similarity sentence score", this.wordSimilarityDocumentScoreStats("25th %ile similarity sentence score")),
+      ("mean word similarity sentence score", this.wordSimilarityDocumentScoreStats("mean similarity sentence score")),
+      ("median word similarity sentence score", this.wordSimilarityDocumentScoreStats("median similarity sentence score")),
+      ("75th %ile similarity sentence score", this.wordSimilarityDocumentScoreStats("75th %ile similarity sentence score")),
+      ("maximum similarity sentence score", this.wordSimilarityDocumentScoreStats("maximum similarity sentence score"))
+    )
+  }
 
 }
