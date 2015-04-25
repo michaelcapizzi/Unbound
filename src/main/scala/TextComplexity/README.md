@@ -24,8 +24,13 @@ Lexical Features | Syntactic Features | Paragraph Features
  \* = easily normalized
  \** = not easily normalized
  
- Performance
- ---------------------
+ 
+Performance (6 classes)
+---------------------
+
+Perceptron: epochs = 20, marginRatio = 1.0
+LogisticRegression: bias = false
+RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  
  Features Used | Model Used | Accuracy | Precision | Recall | F1
  ---|---|---|---|---|---
@@ -33,9 +38,25 @@ Lexical Features | Syntactic Features | Paragraph Features
  Lexical | Logistic Regression | 29.6% | .16 | .21 | .18
  -- | Random Forest | 42.6% | .45 | .43 | .44
  | | | | |
+ -- | Perceptron | 29.6% | .10 | .17 | .13
+ Syntactic | Logistic Regression | 22.2% | .18 | .18 | .18 
+ -- | Random Forest | 27.7% | .13 | .19 | .15
+ | | | | |
+ -- | Perceptron | 33.3% | .16 | .19 | .18
+ Paragraph | Logistic Regression | 24.1% | .17 | .18 | .18
+ -- | Random Forest | 30% | .21 | .23 | .22
+ | | | | |
  -- | Perceptron | 31.5% | .13 | .18 | .15
  Lex + Syn | Logistic Regression | 29.6% | .24 | .28 | .26
  -- | Random Forest | 27.7% | .16 | .20 | .18
+ | | | | |
+ -- | Perceptron | 24% | .12 | .16 | .14
+ Lex + Par | Logistic Regression | 31.5% | .24 | .25 | .24
+ -- | Random Forest | 30% | .15 | .22 | .18
+ | | | | |
+ -- | Perceptron | 26% | .09 | .15 | .11
+ Syn + Par | Logistic Regression | 22.2% | .15 | .17 | .16
+ -- | Random Forest | 26% | .12 | .19 | .15
  | | | | |
  -- | Perceptron | 27.7% | .05 | .16 | .08
  Lex + Syn + Par | Logistic Regression | 31.5% | .32 | .30 | .31

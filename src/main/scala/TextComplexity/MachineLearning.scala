@@ -364,10 +364,13 @@ class MachineLearning(
       } else {
         val classifier = model match {                                                                          //else build the classifier
           case "logisticRegression" => new LogisticRegressionClassifier[Int, String](bias = false)
-          case "perceptron" => new PerceptronClassifier[Int, String](epochs = 20, marginRatio = 1d)
+          case "perceptron" => new PerceptronClassifier[Int, String](
+            epochs = 20,
+            marginRatio = 1d
+          )
           case "randomForest" => new RandomForestClassifier[Int, String](
-            numTrees = 1000,
-            featureSampleRatio = -0.20,
+            numTrees = 5000,
+            featureSampleRatio = -.20,
             maxTreeDepth = 4
           )
         }
