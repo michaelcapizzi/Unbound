@@ -41,6 +41,19 @@ object Similarity {
     dotProduct / normalized
   }*/
 
+  def foldElementwiseSum(vectorList: Vector[SparseVector[Double]]): SparseVector[Double] = {
+
+    def loop(vectorList: Vector[SparseVector[Double]], accum: SparseVector[Double]): SparseVector[Double] = {
+      if (vectorList.tail.isEmpty) {
+        accum
+      }
+      else {
+        loop(vectorList.tail, accum + vectorList.tail.head)
+      }
+    }
+    loop(vectorList, vectorList.head)
+  }
+
   def wordSimilarityVector(wordOneVector: SparseVector[Double], wordTwoVector: SparseVector[Double]): Double = {
     val normalized = sqrt(wordOneVector dot wordOneVector) * sqrt(wordTwoVector dot wordTwoVector)
     val dotProduct = if (wordOneVector.length == 0 || wordTwoVector.length == 0) 0 else wordOneVector dot wordTwoVector

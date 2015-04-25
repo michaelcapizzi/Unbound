@@ -197,19 +197,18 @@ class LexicalFeatures(val textDocument: TextDocument) {
     import scala.collection.mutable.Map
     val similarityHashMap = Map[String, Array[Double]]() //build mutable map to house previously looked up similarity vectors
 
-    val sentenceVectors = for (sentence <- importantWords) yield {
-      //for each sentence
+    val sentenceVectors = for (sentence <- importantWords) yield {                                        //for each sentence
       val sentenceSimilarities =
         for (word <- sentence) yield {
           if (similarityHashMap.contains(word)) {
-            val wordVector = SparseVector(similarityHashMap(word)) //access the word vector
+            val wordVector = SparseVector(similarityHashMap(word))                                        //access the word vector
           } else {
-            val wordVector = SparseVector(Source.fromFile(//build the word vector
+            val wordVector = SparseVector(Source.fromFile(                                                //build the word vector
               "/home/mcapizzi/Github/Unbound/src/main/resources/wordSimilarityData.txt").getLines.
-              find(line => line.startsWith(word)).map(_. //find the vector in the text file
-              split(" ").drop(1)). //split and drop word (leaving just numbers)
+              find(line => line.startsWith(word)).map(_.                                                  //find the vector in the text file
+              split(" ").drop(1)).                                                                        //split and drop word (leaving just numbers)
               toArray.flatten.map(_.toDouble))
-            similarityHashMap(word) = wordVector.toArray //add it to hash map
+            similarityHashMap(word) = wordVector.toArray                                                  //add it to hash map
           }
         }
       //elementwise add all vectors in sentence Similarities / # of words in sentence contributing vectors
