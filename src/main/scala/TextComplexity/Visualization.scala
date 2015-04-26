@@ -33,9 +33,9 @@ object Visualization {
   }
 
   //lowest chart is first model used
-  def makeDistanceHistogram(scoreList: Vector[(String, Vector[(String, String, String)])]) = {
+  def makeDistanceHistogram(scoreList: Vector[(String, Vector[(String, String, String)])], numberOfClasses: Int) = {
     val eval = new EvaluationMetrics(scoreList)
-    val distances = scoreList.map(ml => eval.distanceAccuracy(ml._2).map(_._2))
+    val distances = if (numberOfClasses == 6) scoreList.map(ml => eval.distanceAccuracy6(ml._2).map(_._2)) else scoreList.map(ml => eval.distanceAccuracy3(ml._2).map(_._2))
 
     for (ml <- distances) yield {
       histogram(ml, ml.distinct.length - 1)

@@ -156,7 +156,7 @@ class MachineLearning(
   }
 
   def convertLabel(label: String): String = {
-    if (numberOfClasses == 5) {
+    if (numberOfClasses == 6) {
       label match {
         case "0001" => "0"
         case "0203" => "1"
@@ -175,7 +175,7 @@ class MachineLearning(
   }
 
   def revertLabel(label: Int): String = {
-    if (numberOfClasses == 5) {
+    if (numberOfClasses == 6) {
       label match {
         case 0 => "0001"
         case 1 => "0203"
@@ -192,7 +192,6 @@ class MachineLearning(
       }
     }
   }
-
 
   //builds svmLight feature vector
   def buildRawFinalFeatureVector(wordSimilarity: Boolean) = {
@@ -384,7 +383,7 @@ class MachineLearning(
           )
           case "randomForest" => new RandomForestClassifier[Int, String](
             numTrees = 5000,
-            featureSampleRatio = -.20,
+            featureSampleRatio = -.8,
             maxTreeDepth = 4
           )
         }
@@ -422,6 +421,8 @@ class MachineLearning(
     //what does Random Forest give?
     //what to use for NaiveBayes? anything?
   }
+
+
 
   /*//TODO build using Counters (see UsingCountersDatums)
   def fullTrainAndTest = {

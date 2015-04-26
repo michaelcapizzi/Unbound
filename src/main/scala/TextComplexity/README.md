@@ -64,4 +64,41 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  -- | Lexile | 24.07% | .32 | .36 | .34
  
 
+Performance (3 classes)
+---------------------
+
+Perceptron: epochs = 20, marginRatio = 1.0
+LogisticRegression: bias = false
+RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
+
+ Features Used | Model Used | Accuracy | Precision | Recall | F1
+ ---|---|---|---|---|---
+ -- | Perceptron | 33.3% | .11 | .33 | .17
+ Lexical | Logistic Regression | 51.9% | .31 | .35 | .33
+ -- | Random Forest | 70.4% | .47 | .53 | .50
+ | | | | |
+ -- | Perceptron | 33.3% | .11 | .33 | .17
+ Syntactic | Logistic Regression | 46.3% | .33 | .34 | .33
+ -- | Random Forest | 70.4% | .48 | .52 | .50
+ | | | | |
+ -- | Perceptron | 33.3% | .11 | .33 | .17
+ Paragraph | Logistic Regression | 57.4% | .49 | .44 | .47
+ -- | Random Forest | 70.4% | .80 | .56 | .66
+ | | | | |
+ -- | Perceptron | 31.5% | .11 | .31 | .16
+ Lex + Syn | Logistic Regression | 50% | .34 | .37 | .35
+ -- | Random Forest | 74.1% | .50 | .55 | .53
+ | | | | |
+ -- | Perceptron | 37% | .33 | .34 | .34
+ Lex + Par | Logistic Regression | 55.5% | .50 | .47 | .49
+ -- | Random Forest | 66.6% | .44 | .50 | .47
+ | | | | |
+ -- | Perceptron | 33.3% | .11 | .33 | .17
+ Syn + Par | Logistic Regression | 50% | .36 | .37 | .37
+ -- | Random Forest | 70.4% | .47 | .53 | .50
+ | | | | |
+ -- | Perceptron | 33.3% | .11 | .33 | .17
+ Lex + Syn + Par | Logistic Regression | 61.1% | .57 | .49 | .53
+ -- | Random Forest | 68.5% | .45 | .51 | .48
+
  

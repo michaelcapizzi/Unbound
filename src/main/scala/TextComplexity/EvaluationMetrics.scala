@@ -24,7 +24,7 @@ class EvaluationMetrics(fullScoreList: Vector[(String, Vector[(String, String, S
     (mlScoreList.map(item => isAccurate(item._2, item._3)).sum.toDouble / mlScoreList.length.toDouble) * 100          //sum up correct and divide by total number of items then multiply by 100
   }
 
-  def distanceAccuracy(mlScoreList: Vector[(String, String, String)]) = {
+  def distanceAccuracy6(mlScoreList: Vector[(String, String, String)]) = {
     def convertLabel(label: String): Int = {
       label match {
         case "0001" => 0
@@ -45,6 +45,24 @@ class EvaluationMetrics(fullScoreList: Vector[(String, Vector[(String, String, S
     }
   }
 
+  def distanceAccuracy3(mlScoreList: Vector[(String, String, String)]) = {
+    def convertLabel(label: String): Int = {
+      label match {
+        case "0005" => 0
+        case "0608" => 1
+        case "0912" => 2
+      }
+    }
+
+    def calculateDistance(mlScore: Int, actualScore: Int): Int = {
+      mlScore - actualScore
+    }
+
+    for (score <- mlScoreList) yield {
+      score._1 -> calculateDistance(convertLabel(score._2), convertLabel(score._3))
+    }
+  }
+
   /*
   //TODO build
   def distanceAccuracyLabelHistogram(mlScoreList: Vector[(String, String, String)]) = {
@@ -52,8 +70,8 @@ class EvaluationMetrics(fullScoreList: Vector[(String, Vector[(String, String, S
 
   }*/
 
-  def distanceAccuracyTotalHistogram(mlScoreList: Vector[(String, String, String)]) = {
-    val distanceAccuracyScores = this.distanceAccuracy(mlScoreList: Vector[(String, String, String)])
+  def distanceAccuracyTotalHistogram(mlScoreList: Vector[(String, String, String)], numberOfClasses: Int) = {
+    val distanceAccuracyScores = if (numberOfClasses == 6) this.distanceAccuracy6(mlScoreList) else this.distanceAccuracy3(mlScoreList)
 
     for (distance <- distanceAccuracyScores.map(_._2).distinct.sorted) yield {
       distance -> distanceAccuracyScores.count(_._2 == distance)
