@@ -455,7 +455,7 @@ class MachineLearning(
     }
   }*/
 
-  def buildSecondFinalFeatureVector(scoreList: Vector[(String, Vector[(String, String, String)])], features: Vector[String], wordSimilarity: Boolean) = {
+  def buildSecondFinalFeatureVector(scoreList: Vector[(String, Vector[(String, String, String)])], wordSimilarity: Boolean) = {
     val elementary = scoreList.filter(ml => ml._1 == "randomForest").         //take only randomForest results
                       head._2.filter(text => text._2 == "0005")                 //keep only elementary labels
 
@@ -465,7 +465,7 @@ class MachineLearning(
     val highSchool = scoreList.filter(ml => ml._1 == "randomForest").         //take only randomForest results
       head._2.filter(text => text._2 == "0912")                                 //keep only highSchool labels
 
-    val inside = if (wordSimilarity) features.mkString("_") + "_similarity" else features.mkString("_")
+    val inside = if (wordSimilarity) this.featuresToInclude.mkString("_") + "_similarity" else this.featuresToInclude.mkString("_")
 
     val master = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/5/" + inside + ".master").getLines.toVector
 
@@ -481,11 +481,13 @@ class MachineLearning(
       master.find(line => line.contains(text)).get
     }
 
-    val pwElem = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/5/" + inside + "-elementary.master"))
+    new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + inside).mkdir
 
-    val pwMiddle = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/5/" + inside + "-middle.master"))
+    val pwElem = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + inside + "/" + inside + "-elementary.master"))
 
-    val pwHighSchool = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/5/" + inside + "-highSchool.master"))
+    val pwMiddle = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + inside + "/" + inside + "-middle.master"))
+
+    val pwHighSchool = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + inside + "/" + inside + "-highSchool.master"))
 
     elemMatch.map(line => pwElem.println(line))
     pwElem.close
@@ -498,40 +500,160 @@ class MachineLearning(
 
   }
 
+  def buildSecondLeaveOneOutSVMFiles(wordSimilarity: Boolean) = {
+    val elemMasterFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "-elementary_similarity.master" else this.featuresToInclude.mkString("_") + "-elementary.master"
+    val middleMasterFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "-middle_similarity.master" else this.featuresToInclude.mkString("_") + "-middle.master"
+    val highSchoolMasterFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "-highSchool_similarity.master" else this.featuresToInclude.mkString("_") + "-highSchool.master"
+
+    val elemFolderName = elemMasterFileName.dropRight(7)
+    val middleFolderName = middleMasterFileName.dropRight(7)                                                                                 //name folder after parameters
+    val highSchoolFolderName = highSchoolMasterFileName.dropRight(7)                                                                                 //name folder after parameters
+
+    val elemOutsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + elemFolderName)                           //make new folder
+    elemOutsideFolder.mkdir()                                     //create directory
+    val middleOutsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + middleFolderName)                           //make new folder
+    middleOutsideFolder.mkdir()                                     //create directory
+    val highSchoolOutsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + highSchoolFolderName)                           //make new folder
+    highSchoolOutsideFolder.mkdir()                                                       //create directory
 
 
+    //elementary
+    for (i <- 0 to Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + elemMasterFileName).getLines.size - 1) {
+      //set for indexes
 
-  /*
-  val classifierTest = new RandomForestClassifier[Int, String](numTrees = 5000, featureSampleRatio = -.20, maxTreeDepth = 4)
+      val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + elemMasterFileName).getLines.toStream(i) //the line for testing
+      val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + elemMasterFileName).getLines.toStream.take(i) //lines for training BEFORE testing line
+      val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + elemMasterFileName).getLines.toStream.drop(i + 1) //lines for training AFTER testing line
+      val train = (trainBeforeTest ++ trainAfterTest).toVector //concatenated training lines
 
-  val norm = Datasets.svmScaleRVFDataset(trainDataSet, 0, 1)
+      val insideElemFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary/" + (i + 1).toString) //name of inside folder
+      insideElemFolder.mkdir()
 
-  val trainDataSet = RVFDataset.mkDatasetFromSvmLightFormat("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/lexical/1/1.train")
-  val testDataSet = RVFDataset.mkDatumsFromSvmLightFormat("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/lexical/1/1.test")
+      val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary/" + insideElemFolder.getName + "/" + (i + 1).toString + ".train"))
 
-  norm.maxs
+      val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary/" + insideElemFolder.getName + "/" + (i + 1).toString + ".test"))
 
 
-    //normalize data
+      train.map(line => pwTrain.println(line))
+      pwTrain.close
 
-    //make scale range
-    val normalizedTrainDataScaleRange = Datasets.svmScaleRVFDataset(trainDataSet, -1, 1)
-      //why not (0, 1)?
+      pwTest.println(test)
+      pwTest.close
 
-    //apply to every datum
-    def normalizeData(dataSet: RVFDataset[Int, String]): RVFDataset[Int, String] = {
-      val normalizedScaleRange = Datasets.svmScaleRVFDataset(dataSet, -1, 1)
-      for (i <- 0 to dataSet.size - 1) yield
-        Datasets.svmScaleDatum(dataSet.mkDatum(i).featuresCounter, normalizedScaleRange, -1, 1)
     }
 
+      //middleSchool
+      for (i <- 0 to Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + middleMasterFileName).getLines.size - 1) {       //set for indexes
 
-    trainDataSet.featuresCounter()
+        val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + middleMasterFileName).getLines.toStream(i)                       //the line for testing
+        val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + middleMasterFileName).getLines.toStream.take(i)       //lines for training BEFORE testing line
+        val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + middleMasterFileName).getLines.toStream.drop(i + 1)    //lines for training AFTER testing line
+        val train = (trainBeforeTest ++ trainAfterTest).toVector                                                                                                          //concatenated training lines
+
+        val insideElemFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-middle/" + (i + 1).toString)                                                //name of inside folder
+        insideElemFolder.mkdir()
+
+        val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-middle/" + insideElemFolder.getName + "/" + (i + 1).toString + ".train"))
+
+        val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-middle/" + insideElemFolder.getName + "/" + (i + 1).toString + ".test"))
 
 
-    Datasets.svmScaleDatum(trainDataSet.mkDatum(0).featuresCounter, normalizedTrainDataScaleRange, -1, 1)
+        train.map(line => pwTrain.println(line))
+        pwTrain.close
 
-    */
+        pwTest.println(test)
+        pwTest.close
+    }
+
+    //highSchool
+    for (i <- 0 to Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + highSchoolMasterFileName).getLines.size - 1) {       //set for indexes
+
+      val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + highSchoolMasterFileName).getLines.toStream(i)                       //the line for testing
+      val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + highSchoolMasterFileName).getLines.toStream.take(i)       //lines for training BEFORE testing line
+      val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + highSchoolMasterFileName).getLines.toStream.drop(i + 1)    //lines for training AFTER testing line
+      val train = (trainBeforeTest ++ trainAfterTest).toVector                                                                                                          //concatenated training lines
+
+      val insideElemFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-highSchool/" + (i + 1).toString)                                                //name of inside folder
+      insideElemFolder.mkdir()
+
+      val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-highSchool/" + insideElemFolder.getName + "/" + (i + 1).toString + ".train"))
+
+      val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-highSchool/" + insideElemFolder.getName + "/" + (i + 1).toString + ".test"))
+
+
+      train.map(line => pwTrain.println(line))
+      pwTrain.close
+
+      pwTest.println(test)
+      pwTest.close
+    }
+
+  }
+
+  def leaveOneOut(withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
+    val folderName = this.featuresToInclude.mkString("_")
+    val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + folderName)         //select proper outside folder based on parameters
+
+    val scoreList = for (model <- modelsToUse) yield {
+
+      if (model == "naiveBayes") {                                                                              //if Naive Bayes
+      val allDocs = this.importAnnotatedMakeDocuments                       //get all documents
+        (
+          "naiveBayes",
+          (for (document <- allDocs) yield {                                     //for each document...
+          val test = Vector(document)                                             //make it test
+          val train = allDocs.filterNot(_ == document).toVector                   //and all other docs part of train
+          val nb = new NaiveBayes(train, test, Vector(), 0, 0, 0)
+            (
+              document.title,       //title
+              nb.argMax,            //mlScore
+              document.gradeLevel   //actualScore
+              )
+          }).toVector
+          )
+
+      } else {
+        val classifier = model match {                                                                          //else build the classifier
+          case "logisticRegression" => new LogisticRegressionClassifier[Int, String](bias = false)
+          case "perceptron" => new PerceptronClassifier[Int, String](
+            epochs = 20,
+            marginRatio = 1d
+          )
+          case "randomForest" => new RandomForestClassifier[Int, String](
+            numTrees = 5000,
+            featureSampleRatio = -.8,
+            maxTreeDepth = 4
+          )
+        }
+
+        (
+          model,                                                                            //classifier name
+          (for (insideFolder <- outsideFolder.listFiles) yield {
+            //for each subfolder
+            val train = insideFolder.listFiles.find(fileName => fileName.getName.contains("train")).get             //get train file
+            val test = insideFolder.listFiles.find(fileName => fileName.getName.contains("test")).get               //get test file
+
+            val trainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(train.getCanonicalPath)                       //build training dataset
+            val testDataSet = RVFDataset.mkDatumsFromSvmLightFormat(test.getCanonicalPath)                          //build test dataset
+
+            classifier.train(trainDataSet)
+
+            val titleRegex = """.+#(.*)""".r
+            val line = Source.fromFile(test).getLines.toVector.head
+            val title = titleRegex.replaceFirstIn(line, """$1""")
+
+            (
+              title,                                                                        //title
+              revertLabel(classifier.classOf(testDataSet.head)),                            //mlScore
+              revertLabel(testDataSet.head.label)                                           //actualScore
+              )
+          }).toVector
+          )
+      }
+    }
+    scoreList.asInstanceOf[Vector[(String, Vector[(String, String, String)])]]
+  }
+
 
 
 }
