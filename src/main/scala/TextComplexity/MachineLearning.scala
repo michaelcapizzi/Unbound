@@ -3,7 +3,7 @@ package TextComplexity
 import java.io._
 import Importing._
 import Serializing._
-import edu.arizona.sista.learning.{RandomForestClassifier, PerceptronClassifier, LogisticRegressionClassifier, RVFDataset}
+import edu.arizona.sista.learning._
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 import scala.collection.mutable.Buffer
 import scala.collection.parallel.mutable
@@ -18,11 +18,14 @@ class MachineLearning(
                        val processor: CoreNLPProcessor,             //required
                        val featuresToInclude: Vector[String],       //required
                        val modelsToUse: Vector[String],             //required
+                       val numberOfClasses: Int,                    //required
                        val rawTextFileFolder: String = "",
                        val textToTestFilePath: String = ""
                        ) {
 
   //TODO reset classifier with only three classes
+
+  //val scores = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/lexile").getLines.toList.map(_.split(",")).map(_.map(_.trim)).map(each => (each.head, each(1), each(2))).toVector
 
   val rawFile = new File(rawTextFileFolder)
   val annotatedFile = new File(annotatedTextFileFolder)
@@ -152,27 +155,41 @@ class MachineLearning(
     )
   }
 
-  //TODO paramterize
   def convertLabel(label: String): String = {
-    label match {
-      case "0001" => "0"
-      case "0203" => "1"
-      case "0405" => "2"
-      case "0608" => "3"
-      case "0910" => "4"
-      case "1112" => "5"
+    if (numberOfClasses == 5) {
+      label match {
+        case "0001" => "0"
+        case "0203" => "1"
+        case "0405" => "2"
+        case "0608" => "3"
+        case "0910" => "4"
+        case "1112" => "5"
+      }
+    } else {
+      label match {
+        case ("0001" | "0203" | "0405") => "0"
+        case "0608" => "1"
+        case ("0910" | "1112") => "2"
+      }
     }
   }
 
-  //TODO paramterize
   def revertLabel(label: Int): String = {
-    label match {
-      case 0 => "0001"
-      case 1 => "0203"
-      case 2 => "0405"
-      case 3 => "0608"
-      case 4 => "0910"
-      case 5 => "1112"
+    if (numberOfClasses == 5) {
+      label match {
+        case 0 => "0001"
+        case 1 => "0203"
+        case 2 => "0405"
+        case 3 => "0608"
+        case 4 => "0910"
+        case 5 => "1112"
+      }
+    } else {
+      label match {
+        case 0 => "0005"
+        case 1 => "0608"
+        case 2 => "0912"
+      }
     }
   }
 
@@ -214,7 +231,7 @@ class MachineLearning(
 
     val svmFile = toSVM(featureBuffer)
     val featureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "_similarity.master" else this.featuresToInclude.mkString("_") + ".master"
-    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
+    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + featureVectorFileName))
     svmFile.map(line => pw.println(line))
     pw.close
   }
@@ -300,7 +317,7 @@ class MachineLearning(
 
     val svmFile = toSVM(featureBuffer)
     val featureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "_similarity.master" else this.featuresToInclude.mkString("_") + ".master"
-    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName))
+    val pw = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + featureVectorFileName))
     svmFile.map(line => pw.println(line))
     pw.close
   }
@@ -308,23 +325,23 @@ class MachineLearning(
   def buildLeaveOneOutSVMFiles(wordSimilarity: Boolean) = {
     val featureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "_similarity.master" else this.featuresToInclude.mkString("_") + ".master"   //find .master file based on parameters
     val folderName = featureVectorFileName.dropRight(7)                                                                                 //name folder after parameters
-    val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)                           //make new folder
+    val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + folderName)                           //make new folder
     outsideFolder.mkdir()                                                                                                                   //create directory
 
-    for (i <- 0 to Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.size - 1) {       //set for indexes
+    for (i <- 0 to Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" +featureVectorFileName).getLines.size - 1) {       //set for indexes
 
-      val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream(i)                       //the line for testing
-      val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.take(i)       //lines for training BEFORE testing line
-      val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + featureVectorFileName).getLines.toStream.drop(i + 1)    //lines for training AFTER testing line
+      val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + featureVectorFileName).getLines.toStream(i)                       //the line for testing
+      val trainBeforeTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + featureVectorFileName).getLines.toStream.take(i)       //lines for training BEFORE testing line
+      val trainAfterTest = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + featureVectorFileName).getLines.toStream.drop(i + 1)    //lines for training AFTER testing line
       val train = (trainBeforeTest ++ trainAfterTest).toVector                                                                                                          //concatenated training lines
 
-      val insideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder.getName + "/" + (i + 1).toString)                                                //name of inside folder
+      val insideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + outsideFolder.getName + "/" + (i + 1).toString)                                                //name of inside folder
       insideFolder.mkdir()
 
-      val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder.getName + "/" + insideFolder.getName + "/" + (i + 1).toString + ".train"))
-      //val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + (i + 1).toString + ".train"))
-      val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder.getName + "/" + insideFolder.getName + "/" + (i + 1).toString + ".test"))
-      //val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + outsideFolder + "/" + (i + 1).toString + ".test"))
+      val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + outsideFolder.getName + "/" + insideFolder.getName + "/" + (i + 1).toString + ".train"))
+      //val pwTrain = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + outsideFolder + "/" + (i + 1).toString + ".train"))
+      val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + outsideFolder.getName + "/" + insideFolder.getName + "/" + (i + 1).toString + ".test"))
+      //val pwTest = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + outsideFolder + "/" + (i + 1).toString + ".test"))
 
       train.map(line => pwTrain.println(line))
       pwTrain.close
@@ -338,7 +355,7 @@ class MachineLearning(
   //TODO test NaiveBayes
   def leaveOneOut(withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
     val folderName = this.featuresToInclude.mkString("_")
-    val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + folderName)         //select proper outside folder based on parameters
+    val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + folderName)         //select proper outside folder based on parameters
 
     val scoreList = for (model <- modelsToUse) yield {
 
@@ -438,6 +455,36 @@ class MachineLearning(
   }*/
 
 
+  /*
+  val classifierTest = new RandomForestClassifier[Int, String](numTrees = 5000, featureSampleRatio = -.20, maxTreeDepth = 4)
 
+  val norm = Datasets.svmScaleRVFDataset(trainDataSet, 0, 1)
+
+  val trainDataSet = RVFDataset.mkDatasetFromSvmLightFormat("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/lexical/1/1.train")
+  val testDataSet = RVFDataset.mkDatumsFromSvmLightFormat("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/lexical/1/1.test")
+
+  norm.maxs
+
+
+    //normalize data
+
+    //make scale range
+    val normalizedTrainDataScaleRange = Datasets.svmScaleRVFDataset(trainDataSet, -1, 1)
+      //why not (0, 1)?
+
+    //apply to every datum
+    def normalizeData(dataSet: RVFDataset[Int, String]): RVFDataset[Int, String] = {
+      val normalizedScaleRange = Datasets.svmScaleRVFDataset(dataSet, -1, 1)
+      for (i <- 0 to dataSet.size - 1) yield
+        Datasets.svmScaleDatum(dataSet.mkDatum(i).featuresCounter, normalizedScaleRange, -1, 1)
+    }
+
+
+    trainDataSet.featuresCounter()
+
+
+    Datasets.svmScaleDatum(trainDataSet.mkDatum(0).featuresCounter, normalizedTrainDataScaleRange, -1, 1)
+
+    */
 
 }

@@ -60,6 +60,8 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  -- | Perceptron | 27.7% | .05 | .16 | .08
  Lex + Syn + Par | Logistic Regression | 31.5% | .32 | .30 | .31
  -- | Random Forest | 25.9% | .13 | .19 | .15
+ | | | | |
+ -- | Lexile | 24.07% | .32 | .36 | .34
  
 
  

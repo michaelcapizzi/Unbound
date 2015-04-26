@@ -15,7 +15,8 @@ object Visualization {
   //help()
 
   //lowest chart is first model used
-  //TODO confirm accuracy scores is in blue
+
+
   def makeAccuracyPie(scoreList: Vector[(String, Vector[(String, String, String)])]) = {
     val eval = new EvaluationMetrics(scoreList)
     val accuracyScores = scoreList.map(ml => eval.accuracy(ml._2))
