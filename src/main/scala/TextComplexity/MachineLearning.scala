@@ -5,6 +5,7 @@ import Importing._
 import Serializing._
 import edu.arizona.sista.learning._
 import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
+import edu.stanford.nlp.ling.Datum
 import scala.collection.mutable.Buffer
 import scala.collection.parallel.mutable
 import scala.io.Source
@@ -423,7 +424,6 @@ class MachineLearning(
   }
 
 
-
   /*//TODO build using Counters (see UsingCountersDatums)
   def fullTrainAndTest = {
     val featureVectorFileName = this.featuresToInclude.mkString("_") + ".master"
@@ -454,6 +454,51 @@ class MachineLearning(
        */
     }
   }*/
+
+  def buildSecondFinalFeatureVector(scoreList: Vector[(String, Vector[(String, String, String)])], features: Vector[String], wordSimilarity: Boolean) = {
+    val elementary = scoreList.filter(ml => ml._1 == "randomForest").         //take only randomForest results
+                      head._2.filter(text => text._2 == "0005")                 //keep only elementary labels
+
+    val middle = scoreList.filter(ml => ml._1 == "randomForest").             //take only randomForest results
+      head._2.filter(text => text._2 == "0608")                                 //keep only middle labels
+
+    val highSchool = scoreList.filter(ml => ml._1 == "randomForest").         //take only randomForest results
+      head._2.filter(text => text._2 == "0912")                                 //keep only highSchool labels
+
+    val inside = if (wordSimilarity) features.mkString("_") + "_similarity" else features.mkString("_")
+
+    val master = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/5/" + inside + ".master").getLines.toVector
+
+    val elemMatch = for (text <- elementary.map(_._1)) yield {
+      master.find(line => line.contains(text)).get
+    }
+
+    val middleMatch = for (text <- middle.map(_._1)) yield {
+      master.find(line => line.contains(text)).get
+    }
+
+    val highSchoolMatch = for (text <- highSchool.map(_._1)) yield {
+      master.find(line => line.contains(text)).get
+    }
+
+    val pwElem = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/5/" + inside + "-elementary.master"))
+
+    val pwMiddle = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/5/" + inside + "-middle.master"))
+
+    val pwHighSchool = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/5/" + inside + "-highSchool.master"))
+
+    elemMatch.map(line => pwElem.println(line))
+    pwElem.close
+
+    middleMatch.map(line => pwMiddle.println(line))
+    pwMiddle.close
+
+    highSchoolMatch.map(line => pwHighSchool.println(line))
+    pwHighSchool.close
+
+  }
+
+
 
 
   /*
@@ -487,5 +532,6 @@ class MachineLearning(
     Datasets.svmScaleDatum(trainDataSet.mkDatum(0).featuresCounter, normalizedTrainDataScaleRange, -1, 1)
 
     */
+
 
 }
