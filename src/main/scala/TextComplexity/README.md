@@ -13,7 +13,9 @@ K-1 |
 4-5 |
 6-8 |
 9-10 |
-11-12
+11-12 |
+
+As a result of the small data size, leave-one-out testing will be utilized.
 
 Features Collected
 ---------------------
@@ -53,7 +55,7 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  ---|---|---|---|---|---
  -- | Perceptron | 29.6% | .05 | .17 | .08
  Lexical | Logistic Regression | 29.6% | .16 | .21 | .18
- -- | Random Forest | 42.6% | .45 | .43 | .44
+ -- | **Random Forest** | **42.6%** | **.45** | **.43** | **.44**
  | | | | |
  -- | Perceptron | 29.6% | .10 | .17 | .13
  Syntactic | Logistic Regression | 22.2% | .18 | .18 | .18 
@@ -79,9 +81,9 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  Lex + Syn + Par | Logistic Regression | 31.5% | .32 | .30 | .31
  -- | Random Forest | 25.9% | .13 | .19 | .15
  | | | | |
- -- | Lexile | 24.07% | .32 | .36 | .34
+ -- | **Lexile** | **24.07%** | **.32** | **.36** | **.34**
 
-Performance over all 6 classes
+Performance over all 6 classes was very poor with, surprisingly, just lexical features run over a Random Forest model performing the best.  That performance, however, 
 
 Performance (3 classes)
 ---------------------
