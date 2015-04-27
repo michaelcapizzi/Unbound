@@ -590,12 +590,13 @@ class MachineLearning(
 
   }
 
-  def leaveOneOut(withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
+  def secondLeaveOneOut(middleSchoolScoreList: Vector[(String, Vector[(String, String, String)])], withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
     val folderName = this.featuresToInclude.mkString("_")
-    val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + folderName)         //select proper outside folder based on parameters
+    val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + "paragraph/" + folderName)         //select proper outside folder based on parameters
 
     val scoreList = for (model <- modelsToUse) yield {
 
+      /*
       if (model == "naiveBayes") {                                                                              //if Naive Bayes
       val allDocs = this.importAnnotatedMakeDocuments                       //get all documents
         (
@@ -612,7 +613,7 @@ class MachineLearning(
           }).toVector
           )
 
-      } else {
+      } else { */
         val classifier = model match {                                                                          //else build the classifier
           case "logisticRegression" => new LogisticRegressionClassifier[Int, String](bias = false)
           case "perceptron" => new PerceptronClassifier[Int, String](
@@ -628,28 +629,64 @@ class MachineLearning(
 
         (
           model,                                                                            //classifier name
-          (for (insideFolder <- outsideFolder.listFiles) yield {
-            //for each subfolder
-            val train = insideFolder.listFiles.find(fileName => fileName.getName.contains("train")).get             //get train file
-            val test = insideFolder.listFiles.find(fileName => fileName.getName.contains("test")).get               //get test file
+          (for (gradeLevelFolder <- outsideFolder.listFiles) yield {                                                  //for each subfolder
+            if (gradeLevelFolder.getName.contains("elementary")) {
+              for (insideFolder <- gradeLevelFolder.listFiles) yield {
 
-            val trainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(train.getCanonicalPath)                       //build training dataset
-            val testDataSet = RVFDataset.mkDatumsFromSvmLightFormat(test.getCanonicalPath)                          //build test dataset
+                val train = insideFolder.listFiles.find(fileName => fileName.getName.contains("train")).get //get train file
+                val test = insideFolder.listFiles.find(fileName => fileName.getName.contains("test")).get //get test file
 
-            classifier.train(trainDataSet)
+                val trainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(train.getCanonicalPath) //build training dataset
+                val testDataSet = RVFDataset.mkDatumsFromSvmLightFormat(test.getCanonicalPath) //build test dataset
 
-            val titleRegex = """.+#(.*)""".r
-            val line = Source.fromFile(test).getLines.toVector.head
-            val title = titleRegex.replaceFirstIn(line, """$1""")
+                classifier.train(trainDataSet)
 
-            (
-              title,                                                                        //title
-              revertLabel(classifier.classOf(testDataSet.head)),                            //mlScore
-              revertLabel(testDataSet.head.label)                                           //actualScore
-              )
+                val titleRegex = """.+#(.*)""".r
+                val line = Source.fromFile(test).getLines.toVector.head
+                val title = titleRegex.replaceFirstIn(line, """$1""")
+
+                (
+                  title, //title
+                  revertLabel(classifier.classOf(testDataSet.head)), //mlScore
+                  revertLabel(testDataSet.head.label) //actualScore
+                  )
+              }
+            } else if (gradeLevelFolder.getName.contains("middle")) {
+              val middleSchoolPredictions = middleSchoolScoreList.filter(ml => ml._1 == "randomForest").             //take only randomForest results
+                head._2.filter(text => text._2 == "0608")                                                           //keep only middle labels
+
+              for (item <- middleSchoolPredictions) yield {
+                (
+                  item._1,
+                  item._2,
+                  item._3
+                  )
+              }
+            } else if (gradeLevelFolder.getName.contains("highSchool")) {
+              for (insideFolder <- gradeLevelFolder.listFiles) yield {
+
+                val train = insideFolder.listFiles.find(fileName => fileName.getName.contains("train")).get //get train file
+                val test = insideFolder.listFiles.find(fileName => fileName.getName.contains("test")).get //get test file
+
+                val trainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(train.getCanonicalPath) //build training dataset
+                val testDataSet = RVFDataset.mkDatumsFromSvmLightFormat(test.getCanonicalPath) //build test dataset
+
+                classifier.train(trainDataSet)
+
+                val titleRegex = """.+#(.*)""".r
+                val line = Source.fromFile(test).getLines.toVector.head
+                val title = titleRegex.replaceFirstIn(line, """$1""")
+
+                (
+                  title, //title
+                  revertLabel(classifier.classOf(testDataSet.head)), //mlScore
+                  revertLabel(testDataSet.head.label) //actualScore
+                  )
+              }
+            }
           }).toVector
           )
-      }
+      //}
     }
     scoreList.asInstanceOf[Vector[(String, Vector[(String, String, String)])]]
   }
