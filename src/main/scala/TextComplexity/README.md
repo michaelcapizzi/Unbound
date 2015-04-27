@@ -83,7 +83,13 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  | | | | |
  -- | **Lexile** | **24.07%** | **.32** | **.36** | **.34**
 
-Performance over all 6 classes was very poor with, surprisingly, just lexical features run over a Random Forest model performing the best.  That performance, however, 
+Performance over all 6 classes was very poor with, surprisingly, just lexical features run over a Random Forest model performing the best.  That performance, however, is much better than Lexile, a popular industry model.  Lexile officially presents a score-band for each grade level with significant overlap between grade levels (see below), which isn't very useful.  In order to generate the scores above, I forced Lexile to choose the lowest grade-level from their Lexile band.
+
+**INSERT picture of Lexile bands
+
+Gus Hahn-Powell suggested I considered a two-step classifier that first classifies among three classes: Elementary, Middle School, High School, and then classifies into the specific band within each large class.
+
+In preparation for that, I tested all models and features on three classes.  See below.
 
 Performance (3 classes)
 ---------------------
@@ -96,19 +102,19 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  ---|---|---|---|---|---
  -- | Perceptron | 33.3% | .11 | .33 | .17
  Lexical | Logistic Regression | 51.9% | .31 | .35 | .33
- -- | Random Forest | 70.4% | .47 | .53 | .50
+ -- | **Random Forest** | **70.4%** | **.47** | **.53** | **.50**
  | | | | |
  -- | Perceptron | 33.3% | .11 | .33 | .17
  Syntactic | Logistic Regression | 46.3% | .33 | .34 | .33
- -- | Random Forest | 70.4% | .48 | .52 | .50
+ -- | **Random Forest** | **70.4%** | **.48** | **.52** | **.50**
  | | | | |
  -- | Perceptron | 33.3% | .11 | .33 | .17
  Paragraph | Logistic Regression | 57.4% | .49 | .44 | .47
- -- | Random Forest | 70.4% | .80 | .56 | .66
+ -- | **Random Forest** | **70.4%** | **.80** |**.56** | **.66**
  | | | | |
  -- | Perceptron | 31.5% | .11 | .31 | .16
  Lex + Syn | Logistic Regression | 50% | .34 | .37 | .35
- -- | Random Forest | 74.1% | .50 | .55 | .53
+ -- | **Random Forest** | **74.1%** | **.50** | **.55** | **.53**
  | | | | |
  -- | Perceptron | 37% | .33 | .34 | .34
  Lex + Par | Logistic Regression | 55.5% | .50 | .47 | .49
@@ -121,5 +127,9 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  -- | Perceptron | 33.3% | .11 | .33 | .17
  Lex + Syn + Par | Logistic Regression | 61.1% | .57 | .49 | .53
  -- | Random Forest | 68.5% | .45 | .51 | .48
+ 
+**Explain P and R within 0608 class.
+
+**Explain problems with implementing second-tier of class.
 
  
