@@ -1,6 +1,20 @@
 Text Complexity Model
 ========================
 
+Data
+-----------------
+
+The data is sparse, consisting of full-texts and excerpts from different grade-level bands as identified by the Common Core Standards:
+
+Grade-Level Band | # of Full-text Samples | # of Excerpt Samples | Total # of Samples
+---|---|---|---
+K-1 |
+2-3 |
+4-5 |
+6-8 |
+9-10 |
+11-12
+
 Features Collected
 ---------------------
 
@@ -23,6 +37,10 @@ word similarity in sentences in text (parameterized)| % of complex sentences in 
  \* = easily normalized
  \** = not easily normalized
  
+Two issues discovered:
+
+- The word similarity method that I developed took entirely too long to run.  Initially, it was set to generate an approximation of the word similarity of a sentence.  But in doing so, it required calculating the cosine similarity of every noun, adjective, verb, and adverb in the text.  And for the longer texts (10k lines) it was too much.  On Becky Sharp's suggestion, I tried to shorten it by elementwise adding the similarity vectors for each word in the sentence first and then running cosine similarity on every two sentences within a 5-sentence window, and it still took very long to run.  I am still curious as to whether or not it will add any value to the model, but at this point, it is too time consuming to run in my tests.
+- I have data that ranges from a percent to whole numbers under 100.  I fear that this difference is affecting the model, and so I need to scale the data.  I know, in theory, how to do this, but I was unable to utilize the methods available in learning to do it and did not have a chance to implement it myself.
  
 Performance (6 classes)
 ---------------------
@@ -62,7 +80,8 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  -- | Random Forest | 25.9% | .13 | .19 | .15
  | | | | |
  -- | Lexile | 24.07% | .32 | .36 | .34
- 
+
+Performance over all 6 classes
 
 Performance (3 classes)
 ---------------------
