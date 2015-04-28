@@ -24,8 +24,6 @@ class MachineLearning(
                        val textToTestFilePath: String = ""
                        ) {
 
-  //TODO reset classifier with only three classes
-
   //val scores = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/lexile").getLines.toList.map(_.split(",")).map(_.map(_.trim)).map(each => (each.head, each(1), each(2))).toVector
 
   val rawFile = new File(rawTextFileFolder)

@@ -55,7 +55,7 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  ---|---|---|---|---|---
  -- | Perceptron | 29.6% | .05 | .17 | .08
  Lexical | Logistic Regression | 29.6% | .16 | .21 | .18
- -- | **Random Forest** | **42.6%** | **.45** | **.43** | **.44**
+ -- | **Random Forest** | **44.4%** | **.47** | **.41** | **.44**
  | | | | |
  -- | Perceptron | 29.6% | .10 | .17 | .13
  Syntactic | Logistic Regression | 22.2% | .18 | .18 | .18 
