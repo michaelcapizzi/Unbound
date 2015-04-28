@@ -14,6 +14,7 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
 
   //TODO implement feature selection parameters
   //TODO handle zeros appearing in "sparse" vector in vector calculations
+  //SparseVector[Double]([size])(index -> value, index -> value)
 
   //build a lexicon for all vocabulary
   val lex = new Lexicon[String]
