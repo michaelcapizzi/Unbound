@@ -18,6 +18,7 @@ object UsingCountersDatums {
   //how to use counter
   list.map(counter.incrementCount(_))
 
+
   //can manually set counter value
   counter.setCount("blah", 55d)
 
@@ -30,6 +31,7 @@ object UsingCountersDatums {
   val lex = new Lexicon[String]
 
   list.map(lex.add)
+
 
 
   //make the datum with those things defined in curly brackets

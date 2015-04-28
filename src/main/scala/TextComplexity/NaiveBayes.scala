@@ -1,5 +1,9 @@
 package TextComplexity
 
+import breeze.linalg.{sum, SparseVector}
+import edu.arizona.sista.struct.{Counter, Lexicon}
+import Similarity._
+
 import scala.math._
 
 
@@ -9,6 +13,56 @@ import scala.math._
 class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vector[TextDocument], val stopWords: Vector[String], countFrequencyThreshold: Int, documentFrequencyThreshold: Int, mutualInformationThreshold: Int) {
 
   //TODO implement feature selection parameters
+  //TODO handle zeros appearing in "sparse" vector in vector calculations
+
+  //build a lexicon for all vocabulary
+  val lex = new Lexicon[String]
+  this.extractVocabulary.map(lex.add)
+  lex.keySet  //see all words
+
+  /*//build a counter for each text
+  val counter = new Counter[String]
+  trainingData.head.getWords.map(_.toLowerCase).map(counter.incrementCount(_))
+  counter.keySet
+
+  //build feature vector for each text
+  for (word <- lex.keySet.toVector) yield {
+    counter.getCount(word)
+  }*/
+
+  //build a feature vector for each text all in one
+  val vectors = for (text <- this.trainingData) yield {
+    val counter = new Counter[String]
+    text.getWords.map(_.toLowerCase).map(counter.incrementCount(_))
+
+    (
+      (text.title, text.gradeLevel),
+      for (word <- lex.keySet.toArray) yield {
+      counter.getCount(word)
+    }
+    )
+  }
+
+  //concatenate by class
+  for (individualClass <- this.possibleClasses) yield {
+    val sparseMatches = vectors.filter(tuple => tuple._1._2 == individualClass).map(each =>
+      SparseVector(each._2))
+    (
+      individualClass,
+      foldElementwiseSum(sparseMatches)
+    )
+  }
+
+
+
+
+
+
+
+
+
+
+
 
   //total # of documents
   def trainingDataSize = {
@@ -42,12 +96,47 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
       diff(stopWords)                                                                   //filter out stop words
   }
 
+  //build a lexicon for all vocabulary
+  def allVocabularyLexicon = {
+    val lex = new Lexicon[String]
+    this.extractVocabulary.map(lex.add)
+  }
+
+  //build a feature vector for each text all in one
+  def makeFeatureVectors = {
+    for (text <- this.trainingData) yield {                                     //for each text
+      val counter = new Counter[String]                                           //build a counter
+      text.getWords.map(_.toLowerCase).map(counter.incrementCount(_))             //count each word instance
+
+      (                                                                           //build a tuple
+        (text.title, text.gradeLevel),                                              //title and gradeLevel
+        for (word <- lex.keySet.toArray) yield {                                      //word and count
+          counter.getCount(word)
+        }
+      )
+    }
+  }
+
+
   //concatenate all documents for each class into one document
   def makeDocumentsConcatenized = {
     (for (possibleClass <- possibleClasses) yield {                                       //for each class
       possibleClass -> trainingData.filter(doc => doc.gradeLevel == possibleClass).map(     //take the documents of that class
         textDocument => textDocument.getWords.map(_.toLowerCase)).flatten.                  //get words, put to lowercase, and flatten
         diff(stopWords)                                                                     //filter out stop words
+    }).toMap
+  }
+
+
+  //concatenate by class
+  def makeFeatureVectorsConcatenized = {
+    (for (individualClass <- this.possibleClasses) yield {                                         //for each class
+      val sparseMatches = this.makeFeatureVectors.filter(tuple => tuple._1._2 == individualClass).map(each =>       //find matching feature vectors
+        SparseVector(each._2))                                                                      //build each into sparse vector
+
+      individualClass ->                                                                              //class
+        foldElementwiseSum(sparseMatches)                                                             //elementwise summed feature vector
+
     }).toMap
   }
 
@@ -69,9 +158,56 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     }
   }
 
+  //TODO filter out zeros from size
+  def vectorConditionalProbabilities = {
+    val vocabulary = this.allVocabularyLexicon
+    val docConcat = this.makeFeatureVectorsConcatenized
+
+    for (individualClass <- possibleClasses) yield {
+      val smoothingDenominator = docConcat(individualClass).size.toDouble + vocabulary.size.toDouble
+      (
+        individualClass,
+        1d / smoothingDenominator,
+        for (word <- docConcat(individualClass)) yield {
+          log((word + 1d) / smoothingDenominator.toDouble)
+        }
+      )
+    }
+  }
+
   //tokenize test document
   def testDocumentTokenize = {
     testDocument.map(_.getWords.map(_.toLowerCase))
+  }
+
+
+  //TODO check why calculations are incorrect - because zeros are in size above
+  def vectorTest = {
+    val priors = this.priorProbabilities
+    val concatDocs = this.makeFeatureVectorsConcatenized
+
+    for (doc <- this.testDocument) yield {
+      //for each text
+      val counter = new Counter[String] //build a counter
+      doc.getWords.map(_.toLowerCase).map(counter.incrementCount(_)) //count each word instance
+
+      val vector =  (
+                      (doc.title, doc.gradeLevel),                    //title and gradeLevel
+                      for (word <- lex.keySet.toArray) yield {
+                        counter.getCount(word)                          //word and count
+                      }
+                    )
+
+      for (individualClass <- this.possibleClasses) yield {
+        val conditionalProbs = this.vectorConditionalProbabilities.find(_._1 == individualClass).get._3
+
+        (
+          individualClass,                                    //the class
+          log(priors(individualClass)) +                      //log of the prior PLUS
+            sum(conditionalProbs)                        //sum of the log of the conditional probabilities
+        )
+      }
+    }
   }
 
   //calculate score of test document
@@ -99,14 +235,12 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     }
   }
 
-
-
-
-
-
-
-
-
+  def vectorArgMax = {
+    for (testDoc <- this.vectorTest) yield {
+      val sorted = testDoc.sortBy(_._2).reverse
+      sorted.head._1
+    }
+  }
 
 
 

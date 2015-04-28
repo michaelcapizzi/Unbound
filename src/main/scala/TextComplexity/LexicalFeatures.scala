@@ -259,7 +259,7 @@ class LexicalFeatures(val textDocument: TextDocument) {
   def makeLexicalFeatureVector = {
     Vector(
       (textDocument.title, textDocument.title),
-      (textDocument.gradeLevel, textDocument.title),
+      (textDocument.gradeLevel, textDocument.gradeLevel),
       ("number of distinct conjunctions", this.countDistinctPOS("CC.*")),
       ("% of distinct nouns in all words", this.countDistinctPOS("NN.*")),
       ("% of distinct verbs in all words", this.countDistinctPOS("VB.*")),
@@ -285,7 +285,7 @@ class LexicalFeatures(val textDocument: TextDocument) {
   def makeLexicalFeatureMinusWordSimilarityVector = {
     Vector(
       (textDocument.title, textDocument.title),
-      (textDocument.gradeLevel, textDocument.title),
+      (textDocument.gradeLevel, textDocument.gradeLevel),
       ("number of distinct conjunctions", this.countDistinctPOS("CC.*")),
       ("% of distinct nouns in all words", this.countDistinctPOS("NN.*")),
       ("% of distinct verbs in all words", this.countDistinctPOS("VB.*")),

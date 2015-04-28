@@ -453,7 +453,7 @@ class MachineLearning(
     }
   }*/
 
-  def buildSecondFinalFeatureVector(scoreList: Vector[(String, Vector[(String, String, String)])], wordSimilarity: Boolean) = {
+  /*def buildSecondFinalFeatureVector(scoreList: Vector[(String, Vector[(String, String, String)])], wordSimilarity: Boolean) = {
     val elementary = scoreList.filter(ml => ml._1 == "randomForest").         //take only randomForest results
                       head._2.filter(text => text._2 == "0005")                 //keep only elementary labels
 
@@ -497,7 +497,126 @@ class MachineLearning(
     pwHighSchool.close
 
   }
+*/
 
+  def buildSecondFinalFeatureVector(wordSimilarity: Boolean) = {
+    val allFeatures = if (wordSimilarity) this.makeAnnotatedFeatureClasses(wordSimilarity = true) else this.makeAnnotatedFeatureClasses(wordSimilarity = false)
+
+    val elementaryFeatureVector = if (wordSimilarity) {
+      allFeatures.filter(text =>  text._1(1)._1 == "0001" | text._1(1)._1 == "0203" | text._1(1)._1 == "0405")
+    } else {
+      allFeatures.filter(text =>  text._1(1)._1 == "0001" | text._1(1)._1 == "0203" | text._1(1)._1 == "0405")
+    }
+
+    val middleSchoolFeatureVector = if (wordSimilarity) {
+      allFeatures.filter(text =>  text._1(1)._1 == "0608")
+    } else {
+      allFeatures.filter(text =>  text._1(1)._1 == "0608")
+    }
+
+    val highSchoolFeatureVector = if (wordSimilarity) {
+      allFeatures.filter(text =>  text._1(1)._1 == "0910" | text._1(1)._1 == "1112")
+    } else {
+      allFeatures.filter(text =>  text._1(1)._1 == "0910" | text._1(1)._1 == "1112")
+    }
+
+    def toSVM(buffer: collection.mutable.Buffer[Vector[(String, Double)]]) = {
+      for (row <- buffer) yield {
+        convertLabel(row(1)._1) + " " + {                           //the grade level
+          {for (i <- 2 to row.length - 1) yield {
+            (i-1).toString +                                        //the feature index
+              ":" +
+              row(i)._2.toString                                    //the feature value
+          }}.mkString(" ")
+        } + " #" + row.head._1                                      //the title
+      }
+    }
+
+    //elementary
+    val elemBuffer = collection.mutable.Buffer[Vector[(String, Double)]]()
+
+    for (item <- elementaryFeatureVector) yield {
+      if (featuresToInclude == Vector("lexical")) {
+        elemBuffer += item._1 ++ item._2
+      } else if (featuresToInclude == Vector("syntactic")) {
+        elemBuffer += item._1 ++ item._3
+      } else if (featuresToInclude == Vector("paragraph")) {
+        elemBuffer += item._1 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic")) {
+        elemBuffer += item._1 ++ item._2 ++ item._3
+      } else if (featuresToInclude == Vector("syntactic", "paragraph")) {
+        elemBuffer += item._1 ++ item._3 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "paragraph")) {
+        elemBuffer += item._1 ++ item._2 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic", "paragraph")) {
+        elemBuffer += item._1 ++ item._2 ++ item._3 ++ item._4
+      }
+    }
+
+    val elemSVMFile = toSVM(elemBuffer)
+    val elemFeatureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "_similarity-elementary.master" else this.featuresToInclude.mkString("_") + "-elementary.master"
+    val elemPW = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + elemFeatureVectorFileName))
+    elemSVMFile.map(line => elemPW.println(line))
+    elemPW.close
+
+    //middle school
+    val middleSchoolBuffer = collection.mutable.Buffer[Vector[(String, Double)]]()
+
+    for (item <- middleSchoolFeatureVector) yield {
+      if (featuresToInclude == Vector("lexical")) {
+        middleSchoolBuffer += item._1 ++ item._2
+      } else if (featuresToInclude == Vector("syntactic")) {
+        middleSchoolBuffer += item._1 ++ item._3
+      } else if (featuresToInclude == Vector("paragraph")) {
+        middleSchoolBuffer += item._1 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic")) {
+        middleSchoolBuffer += item._1 ++ item._2 ++ item._3
+      } else if (featuresToInclude == Vector("syntactic", "paragraph")) {
+        middleSchoolBuffer += item._1 ++ item._3 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "paragraph")) {
+        middleSchoolBuffer += item._1 ++ item._2 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic", "paragraph")) {
+        middleSchoolBuffer += item._1 ++ item._2 ++ item._3 ++ item._4
+      }
+    }
+
+    val middleSVMFile = toSVM(middleSchoolBuffer)
+    val middleFeatureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "_similarity-middle.master" else this.featuresToInclude.mkString("_") + "-middle.master"
+    val middlePW = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + middleFeatureVectorFileName))
+    middleSVMFile.map(line => middlePW.println(line))
+    middlePW.close
+
+
+    //high school
+    val highSchoolBuffer = collection.mutable.Buffer[Vector[(String, Double)]]()
+
+    for (item <- highSchoolFeatureVector) yield {
+      if (featuresToInclude == Vector("lexical")) {
+        highSchoolBuffer += item._1 ++ item._2
+      } else if (featuresToInclude == Vector("syntactic")) {
+        highSchoolBuffer += item._1 ++ item._3
+      } else if (featuresToInclude == Vector("paragraph")) {
+        highSchoolBuffer += item._1 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic")) {
+        highSchoolBuffer += item._1 ++ item._2 ++ item._3
+      } else if (featuresToInclude == Vector("syntactic", "paragraph")) {
+        highSchoolBuffer += item._1 ++ item._3 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "paragraph")) {
+        highSchoolBuffer += item._1 ++ item._2 ++ item._4
+      } else if (featuresToInclude == Vector("lexical", "syntactic", "paragraph")) {
+        highSchoolBuffer += item._1 ++ item._2 ++ item._3 ++ item._4
+      }
+    }
+
+    val highSchoolSVMFile = toSVM(highSchoolBuffer)
+    val highSchoolFeatureVectorFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "_similarity-highSchool.master" else this.featuresToInclude.mkString("_") + "-highSchool.master"
+    val highSchoolPW = new PrintWriter(new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + highSchoolFeatureVectorFileName))
+    highSchoolSVMFile.map(line => highSchoolPW.println(line))
+    highSchoolPW.close
+  }
+
+
+  /*
   def buildSecondLeaveOneOutSVMFiles(wordSimilarity: Boolean) = {
     val elemMasterFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "-elementary_similarity.master" else this.featuresToInclude.mkString("_") + "-elementary.master"
     val middleMasterFileName = if (wordSimilarity) this.featuresToInclude.mkString("_") + "-middle_similarity.master" else this.featuresToInclude.mkString("_") + "-middle.master"
@@ -587,8 +706,11 @@ class MachineLearning(
     }
 
   }
+  */
 
-  def secondLeaveOneOut(middleSchoolScoreList: Vector[(String, Vector[(String, String, String)])], withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
+
+
+  /*def secondLeaveOneOut(middleSchoolScoreList: Vector[(String, Vector[(String, String, String)])], withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
     val folderName = this.featuresToInclude.mkString("_")
     val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + "paragraph/" + folderName)         //select proper outside folder based on parameters
 
@@ -687,7 +809,7 @@ class MachineLearning(
       //}
     }
     scoreList.asInstanceOf[Vector[(String, Vector[(String, String, String)])]]
-  }
+  }*/
 
 
 
