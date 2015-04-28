@@ -8,12 +8,12 @@ The data is sparse, consisting of full-texts and excerpts from different grade-l
 
 Grade-Level Band | # of Full-text Samples | # of Excerpt Samples | Total # of Samples
 ---|---|---|---
-K-1 |
-2-3 |
-4-5 |
-6-8 |
-9-10 |
-11-12 |
+K-1 | 0 | 3 | 3
+2-3 | 1 | 6 | 7
+4-5 | 2 | 6 | 8
+6-8 | 3 | 3 | 6
+9-10 | 8 | 4 | 12
+11-12 | 7 | 8 | 16
 
 As a result of the small data size, leave-one-out testing will be utilized.
 
