@@ -122,6 +122,8 @@ class LexicalFeatures(val textDocument: TextDocument) {
       )
   }
 
+  //TODO handle zeros appearing in "sparse" vector in vector calculations
+  //SparseVector[Double]([size])(index -> value, index -> value)
   //calculates similarity score for every word compared to every other word in EACH SENTENCE
   def getWordSimilaritySentenceScores = {
     val importantWords = for (sentence <- textDocument.lexicalTupleInSentences) yield {
@@ -185,6 +187,8 @@ class LexicalFeatures(val textDocument: TextDocument) {
     }
   }
 
+  //TODO handle zeros appearing in "sparse" vector in vector calculations
+  //SparseVector[Double]([size])(index -> value, index -> value)
   //calculates word similarity for a SENTENCE and comapres it to every other sentence IN THE PARAGRAPH
   def getWordSimilarityDocumentScores = {
     val importantWords = for (sentence <- textDocument.lexicalTupleInSentences) yield {
