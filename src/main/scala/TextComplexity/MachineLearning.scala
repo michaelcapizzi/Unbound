@@ -352,7 +352,7 @@ class MachineLearning(
     }
   }
 
-  //TODO test NaiveBayes
+  //TODO rewrite NaiveBayes to be more efficient
   def leaveOneOut(withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
     val folderName = this.featuresToInclude.mkString("_")
     val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + folderName)         //select proper outside folder based on parameters
