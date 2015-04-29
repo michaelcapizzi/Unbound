@@ -710,11 +710,9 @@ class MachineLearning(
 
 
 
-  /*def secondLeaveOneOut(middleSchoolScoreList: Vector[(String, Vector[(String, String, String)])], withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
-    val folderName = this.featuresToInclude.mkString("_")
-    val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + "paragraph/" + folderName)         //select proper outside folder based on parameters
+  def secondLeaveOneOut(scoreList: Vector[(String, Vector[(String, String, String)])], withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
 
-    val scoreList = for (model <- modelsToUse) yield {
+    val finalScoreList = for (model <- modelsToUse) yield {
 
       /*
       if (model == "naiveBayes") {                                                                              //if Naive Bayes
@@ -749,6 +747,22 @@ class MachineLearning(
 
         (
           model,                                                                            //classifier name
+          for (text <- scoreList.head._2.map(_._1)) yield {                                 //for every text
+            val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/6/" + this.featuresToInclude.mkString("_") + ".master").getLines.toStream.find(_.contains(text)).get     //get test line from master file
+            val elemTestIndex = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/paragraph" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary.master").getLines.toStream.indexOf(test)
+
+            if (elemTestIndex != -1) {
+              val elemTrainBefore = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary.master").getLines.toStream.takeWhile(line => line != test)      //lines for training BEFORE testing line
+              val elemTrainAfter = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary.master").getLines.toStream.drop(elemTestIndex + 1)             //lines for training AFTER testing line
+              val train = (elemTrainBefore ++ elemTrainAfter).toVector
+            } else {
+              val train = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary.master").getLines.toVector
+            }
+
+
+
+
+
           (for (gradeLevelFolder <- outsideFolder.listFiles) yield {                                                  //for each subfolder
             if (gradeLevelFolder.getName.contains("elementary")) {
               for (insideFolder <- gradeLevelFolder.listFiles) yield {

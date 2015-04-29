@@ -1,6 +1,6 @@
 package TextComplexity
 
-import breeze.linalg.{sum, SparseVector}
+import breeze.linalg.{VectorBuilder, sum, SparseVector}
 import edu.arizona.sista.struct.{Counter, Lexicon}
 import Similarity._
 
@@ -128,6 +128,10 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     }).toMap
   }
 
+  //l.zipWithIndex.map(each => (each._2, each._1)).toMap
+  //SparseVector[Type]([size])(Map[Index -> Value])
+  //val s = SparseVector.zeros[Double](5)
+  //s(0 to s.size)
 
   //concatenate by class
   def makeFeatureVectorsConcatenized = {
@@ -140,6 +144,7 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
 
     }).toMap
   }
+
 
   //calculate *conditional probabilities*
   def conditionalProbabilities = {
@@ -165,7 +170,7 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     val docConcat = this.makeFeatureVectorsConcatenized
 
     for (individualClass <- possibleClasses) yield {
-      val smoothingDenominator = docConcat(individualClass).size.toDouble + vocabulary.size.toDouble
+      val smoothingDenominator = docConcat(individualClass).activeSize.toDouble + vocabulary.size.toDouble
       (
         individualClass,
         1d / smoothingDenominator,
