@@ -723,6 +723,10 @@ class MachineLearning(
   */
 
 
+  //TODO see if using correctly
+    //follow scoring
+    //keep files one time to confirm
+      //only run firstLeaveOneOut with randomForest
   def secondLeaveOneOut(scoreList: Vector[(String, Vector[(String, String, String)])] /*, withEnsemble: Boolean = false*/): Vector[(String, Vector[(String, String, String)])] = {
 
     for (model <- modelsToUse) yield {
@@ -748,11 +752,11 @@ class MachineLearning(
         model, //classifier name
         (for (text <- scoreList.head._2) yield {
           //for every text
-          val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/6/" + this.featuresToInclude.mkString("_") + ".master").getLines.toStream.find(_.contains(text._1)).get //get test line from master file
+          val test = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/6/" + this.featuresToInclude.mkString("_") + ".master").getLines.toStream.find(_.contains(text._1)).get //get test line from master file
 
           if (text._2 == "0005") {
             //elementary class
-            val elemTestIndex = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/paragraph" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary.master").getLines.toStream.indexOf(test)
+            val elemTestIndex = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary.master").getLines.toStream.indexOf(test)
 
             val elemTrainBefore = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary.master").getLines.toStream.takeWhile(line => line != test) //lines for training BEFORE testing line
             val elemTrainAfter = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-elementary.master").getLines.toStream.drop(elemTestIndex + 1) //lines for training AFTER testing line
@@ -792,14 +796,14 @@ class MachineLearning(
 
             //build tuple
             (
-              text, //title
+              text._1, //title
               revertLabel(classifier.classOf(testDataSet.head)), //mlScore
               revertLabel(testDataSet.head.label) //actualScore
               )
 
           } else if (text._2 == "0608") {
             //middle class
-            val middleTestIndex = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/paragraph" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-middle.master").getLines.toStream.indexOf(test)
+            val middleTestIndex = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-middle.master").getLines.toStream.indexOf(test)
 
             val middleTrainBefore = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-middle.master").getLines.toStream.takeWhile(line => line != test) //lines for training BEFORE testing line
             val middleTrainAfter = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-middle.master").getLines.toStream.drop(middleTestIndex + 1) //lines for training AFTER testing line
@@ -839,14 +843,14 @@ class MachineLearning(
 
             //build tuple
             (
-              text, //title
+              text._1, //title
               revertLabel(classifier.classOf(testDataSet.head)), //mlScore
               revertLabel(testDataSet.head.label) //actualScore
               )
 
           } else {
             //highSchool class
-            val highSchoolTestIndex = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/paragraph" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-highSchool.master").getLines.toStream.indexOf(test)
+            val highSchoolTestIndex = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-highSchool.master").getLines.toStream.indexOf(test)
 
             val highSchoolTrainBefore = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-highSchool.master").getLines.toStream.takeWhile(line => line != test) //lines for training BEFORE testing line
             val highSchoolTrainAfter = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/paragraph/" + this.featuresToInclude.mkString("_") + "/" + this.featuresToInclude.mkString("_") + "-highSchool.master").getLines.toStream.drop(highSchoolTestIndex + 1) //lines for training AFTER testing line
@@ -886,7 +890,7 @@ class MachineLearning(
 
             //build tuple
             (
-              text, //title
+              text._1, //title
               revertLabel(classifier.classOf(testDataSet.head)), //mlScore
               revertLabel(testDataSet.head.label) //actualScore
               )
@@ -896,7 +900,6 @@ class MachineLearning(
       //}
     }
   }
-
 
 
 
