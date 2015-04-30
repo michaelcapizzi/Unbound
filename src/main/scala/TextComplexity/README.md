@@ -61,7 +61,7 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  Features Used | Model Used | Accuracy | Precision | Recall | F1
  ---|---|---|---|---|---
  -- | Perceptron | 29.6% | .05 | .17 | .08
- Lexical | Logistic Regression | 29.6% | .16 | .21 | .18
+ **Lexical** | Logistic Regression | 29.6% | .16 | .21 | .18
  -- | **Random Forest** | **44.4%** | **.47** | **.41** | **.44**
  | | | | |
  -- | Perceptron | 29.6% | .10 | .17 | .13
@@ -108,11 +108,11 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  Features Used | Model Used | Accuracy | Precision | Recall | F1
  ---|---|---|---|---|---
  -- | Perceptron | 33.3% | .11 | .33 | .17
- Lexical | Logistic Regression | 51.9% | .31 | .35 | .33
+ **Lexical** | Logistic Regression | 51.9% | .31 | .35 | .33
  -- | **Random Forest** | **70.4%** | **.47** | **.53** | **.50**
  | | | | |
  -- | Perceptron | 33.3% | .11 | .33 | .17
- Syntactic | Logistic Regression | 46.3% | .33 | .34 | .33
+ **Syntactic** | Logistic Regression | 46.3% | .33 | .34 | .33
  -- | **Random Forest** | **70.4%** | **.48** | **.52** | **.50**
  | | | | |
  -- | Perceptron | 33.3% | .11 | .33 | .17
@@ -120,7 +120,7 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  -- | **Random Forest** | **70.4%** | **.80** |**.56** | **.66**
  | | | | |
  -- | Perceptron | 31.5% | .11 | .31 | .16
- Lex + Syn | Logistic Regression | 50% | .34 | .37 | .35
+ **Lex + Syn** | Logistic Regression | 50% | .34 | .37 | .35
  -- | **Random Forest** | **74.1%** | **.50** | **.55** | **.53**
  | | | | |
  -- | Perceptron | 37% | .33 | .34 | .34
@@ -128,7 +128,7 @@ RandomForest: numTrees = 1000, featureSampleRatio = -.20, maxTreeDepth = 4
  -- | Random Forest | 66.6% | .44 | .50 | .47
  | | | | |
  -- | Perceptron | 33.3% | .11 | .33 | .17
- Syn + Par | Logistic Regression | 50% | .36 | .37 | .37
+ **Syn + Par** | Logistic Regression | 50% | .36 | .37 | .37
  -- | **Random Forest** | **70.4%** | **.47** | **.53** | **.50**
  | | | | |
  -- | Perceptron | 33.3% | .11 | .33 | .17
@@ -150,7 +150,7 @@ Having classified first using Paragraph features through a Random Forest model, 
 
  Features Used | Accuracy | Precision | Recall | F1
  ---|---|---|---|---
- Lexical | 35.2% | .44 | .33 | .38
+ **Lexical** | **35.2%** | **.44** | **.33** | **.38**
  Syntactic | 31.5% | .36 | .24 | .29
  Paragraph | 27.8% | .30 | .23 | .26
  Lex + Syn | 27.8% | .35 | .24 | .28
