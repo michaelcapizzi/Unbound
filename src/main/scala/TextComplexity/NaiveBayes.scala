@@ -164,13 +164,12 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     }
   }
 
-  //TODO filter out zeros from size
   def vectorConditionalProbabilities = {
     val vocabulary = this.allVocabularyLexicon
     val docConcat = this.makeFeatureVectorsConcatenized
 
     for (individualClass <- possibleClasses) yield {
-      val smoothingDenominator = docConcat(individualClass).activeSize.toDouble + vocabulary.size.toDouble
+      val smoothingDenominator = sum(docConcat(individualClass)) + vocabulary.size.toDouble     //size of concatenated class + size of entire vocabulary
       (
         individualClass,
         1d / smoothingDenominator,
@@ -187,7 +186,8 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
   }
 
 
-  //TODO check why calculations are incorrect - because zeros are in size above
+  // TODO figure out why NaN
+  // TODO fix ==> it's taking conditional probabilities from training, not test
   def vectorTest = {
     val priors = this.priorProbabilities
     val concatDocs = this.makeFeatureVectorsConcatenized
@@ -199,18 +199,26 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
 
       val vector =  (
                       (doc.title, doc.gradeLevel),                    //title and gradeLevel
-                      for (word <- lex.keySet.toArray) yield {
+                      for (word <- extractVocabulary.toArray) yield {
                         counter.getCount(word)                          //word and count
                       }
                     )
 
       for (individualClass <- this.possibleClasses) yield {
-        val conditionalProbs = this.vectorConditionalProbabilities.find(_._1 == individualClass).get._3
+        val conditionalProbs = this.vectorConditionalProbabilities.find(_._1 == individualClass)
+
+        val conditionalProbsCalc = for (word <- vector._2) yield {
+          if (word == 0) {
+            log(conditionalProbs.get._2.toDouble)
+          } else {
+            log(conditionalProbs.get._3(vector._2.indexOf(word)) * word)
+          }
+        }
 
         (
           individualClass,                                    //the class
           log(priors(individualClass)) +                      //log of the prior PLUS
-            sum(conditionalProbs)                        //sum of the log of the conditional probabilities
+            sum(conditionalProbsCalc)                        //sum of the log of the conditional probabilities
         )
       }
     }
