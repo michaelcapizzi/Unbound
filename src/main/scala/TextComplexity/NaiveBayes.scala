@@ -208,10 +208,10 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
         val conditionalProbs = this.vectorConditionalProbabilities.find(_._1 == individualClass)
 
         val conditionalProbsCalc = for (word <- vector._2) yield {
-          if (word == 0) {
+          if (word == 0.0) {
             log(conditionalProbs.get._2.toDouble)
           } else {
-            log(conditionalProbs.get._3(vector._2.indexOf(word)) * word)
+            log(conditionalProbs.get._3(vector._2.indexOf(word))) * word
           }
         }
 
