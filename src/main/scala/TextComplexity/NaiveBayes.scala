@@ -10,11 +10,20 @@ import scala.math._
 /**
  * Created by mcapizzi on 4/15/15.
  */
-class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vector[TextDocument], val stopWords: Vector[String], countFrequencyThreshold: Int, documentFrequencyThreshold: Int, mutualInformationThreshold: Int) {
+class NaiveBayes(
+                  val trainingData: Vector[TextDocument],
+                  val testDocuments: Vector[TextDocument],
+                  val stopWords: Vector[String] = Vector(),
+                  countFrequencyThreshold: Int = 0,
+                  documentFrequencyThreshold: Int = 0,
+                  mutualInformationThreshold: Int = 0
+                ) {
 
-  //TODO implement feature selection parameters
+  //TODO implement countFrequencyThreshold, documentFrequencyThreshold, mutualInformationThreshold
 
-  //total # of documents
+
+
+  //total # of training documents
   def trainingDataSize = {
     trainingData.length.toDouble
   }
@@ -38,13 +47,23 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     }).toMap
   }
 
-  //extract all vocabulary from all documents in training
+  //extract all vocabulary from all documents in training and testing
   def extractVocabulary = {
-    trainingData.map(textDocument =>                                                  //for each document,
+    (this.trainingData ++ this.testDocuments).map(textDocument =>                     //for each document,
       textDocument.getWords.map(                                                        //get words
       _.toLowerCase)).flatten.distinct.                                                 //put all to lowercase, flatten, and take only distinct
-      diff(stopWords)                                                                   //filter out stop words
+      diff(stopWords.map(_.toLowerCase))                                                //filter out stop words
   }
+
+  //tokenize test document
+  def testDocumentTokenize = {
+    testDocuments.map(_.getWords.map(_.toLowerCase))
+  }
+
+
+
+  ///////////////////////////////with vectors///////////////////////////////////////
+
 
   //build a lexicon for all vocabulary
   def allVocabularyLexicon = {
@@ -52,7 +71,8 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     this.extractVocabulary.map(lex.add)
   }
 
-  //build a feature vector for each text all in one
+
+  //build a feature vector for each text
   def makeFeatureVectors = {
     for (text <- this.trainingData) yield {                                     //for each text
       val counter = new Counter[String]                                           //build a counter
@@ -68,20 +88,6 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
   }
 
 
-  //concatenate all documents for each class into one document
-  def makeDocumentsConcatenized = {
-    (for (possibleClass <- possibleClasses) yield {                                       //for each class
-      possibleClass -> trainingData.filter(doc => doc.gradeLevel == possibleClass).map(     //take the documents of that class
-        textDocument => textDocument.getWords.map(_.toLowerCase)).flatten.                  //get words, put to lowercase, and flatten
-        diff(stopWords)                                                                     //filter out stop words
-    }).toMap
-  }
-
-  //l.zipWithIndex.map(each => (each._2, each._1)).toMap
-  //SparseVector[Type]([size])(Map[Index -> Value])
-  //val s = SparseVector.zeros[Double](5)
-  //s(0 to s.size)
-
   //concatenate by class
   def makeFeatureVectorsConcatenized = {
     (for (individualClass <- this.possibleClasses) yield {                                         //for each class
@@ -94,24 +100,6 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     }).toMap
   }
 
-
-  //calculate *conditional probabilities*
-  def conditionalProbabilities = {
-    val vocabulary = this.extractVocabulary
-    val docConcat = this.makeDocumentsConcatenized
-
-    for (possibleClass <- possibleClasses) yield {
-      val smoothingDenominator = docConcat(possibleClass).length.toDouble + vocabulary.length.toDouble
-      (
-        possibleClass,                                                                                                    //the class
-        1d / smoothingDenominator, {                                                                                      //the smoothing value for that class
-        vocabulary.map(word =>                                                                                            //for each word
-          word -> (docConcat(possibleClass).count(item => item == word) + 1).toDouble / smoothingDenominator.toDouble           //the count in the class + 1 / smoothingDenominator
-        )
-      }.toMap
-        )
-    }
-  }
 
   def vectorConditionalProbabilities = {
     val vocabulary = this.allVocabularyLexicon
@@ -129,18 +117,13 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     }
   }
 
-  //tokenize test document
-  def testDocumentTokenize = {
-    testDocument.map(_.getWords.map(_.toLowerCase))
-  }
 
 
-  // TODO figure out why NaN
   def vectorTest = {
     val priors = this.priorProbabilities
     val concatDocs = this.makeFeatureVectorsConcatenized
 
-    for (doc <- this.testDocument) yield {
+    for (doc <- this.testDocuments) yield {
       //for each text
       val counter = new Counter[String] //build a counter
       doc.getWords.map(_.toLowerCase).map(counter.incrementCount(_)) //count each word instance
@@ -170,6 +153,47 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     }
   }
 
+
+  def vectorArgMax = {
+    for (testDoc <- this.vectorTest) yield {
+      val sorted = testDoc.sortBy(_._2).reverse
+      sorted.head._1
+    }
+  }
+
+
+  /*
+
+  ///////////////////////////////without vectors///////////////////////////////////////
+
+  //concatenate all documents for each class into one document
+  def makeDocumentsConcatenized = {
+    (for (possibleClass <- possibleClasses) yield {                                       //for each class
+      possibleClass -> trainingData.filter(doc => doc.gradeLevel == possibleClass).map(     //take the documents of that class
+        textDocument => textDocument.getWords.map(_.toLowerCase)).flatten.                  //get words, put to lowercase, and flatten
+        diff(stopWords.map(_.toLowerCase))                                                 //filter out stop words
+    }).toMap
+  }
+
+  //calculate *conditional probabilities*
+  def conditionalProbabilities = {
+    val vocabulary = this.extractVocabulary
+    val docConcat = this.makeDocumentsConcatenized
+
+    for (possibleClass <- possibleClasses) yield {
+      val smoothingDenominator = docConcat(possibleClass).length.toDouble + vocabulary.length.toDouble
+      (
+        possibleClass,                                                                                                    //the class
+        1d / smoothingDenominator, {                                                                                      //the smoothing value for that class
+        vocabulary.map(word =>                                                                                            //for each word
+          word -> (docConcat(possibleClass).count(item => item == word) + 1).toDouble / smoothingDenominator.toDouble           //the count in the class + 1 / smoothingDenominator
+        )
+      }.toMap
+        )
+    }
+  }
+
+
   //calculate score of test document
   def testScores = {
     val priors = this.priorProbabilities
@@ -177,7 +201,7 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     val tokenizedTestDoc = this.testDocumentTokenize
     for (testDoc <- tokenizedTestDoc) yield {                                                     //for every test document
       for (individualClass <- this.possibleClasses) yield {                                         //for each class
-        val conditionalProbs = this.conditionalProbabilities.find(_._1 == individualClass).get
+      val conditionalProbs = this.conditionalProbabilities.find(_._1 == individualClass).get
         (
           individualClass,                                                                          //class name
           log(priors(individualClass)) + testDoc.map(word =>                                 //for each word
@@ -195,13 +219,6 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     }
   }
 
-  def vectorArgMax = {
-    for (testDoc <- this.vectorTest) yield {
-      val sorted = testDoc.sortBy(_._2).reverse
-      sorted.head._1
-    }
-  }
-
-
+  */
 
 }

@@ -377,7 +377,7 @@ class MachineLearning(
             val nb = new NaiveBayes(train, test, Vector(), 0, 0, 0)
             (
               document.title, //title
-              nb.argMax, //mlScore
+              nb.vectorArgMax, //mlScore
               document.gradeLevel //actualScore
               )
           }).toVector
