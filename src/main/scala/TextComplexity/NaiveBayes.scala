@@ -1,6 +1,6 @@
 package TextComplexity
 
-import breeze.linalg.{VectorBuilder, sum, SparseVector}
+import breeze.linalg.{sum, SparseVector}
 import edu.arizona.sista.struct.{Counter, Lexicon}
 import Similarity._
 
@@ -13,57 +13,6 @@ import scala.math._
 class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vector[TextDocument], val stopWords: Vector[String], countFrequencyThreshold: Int, documentFrequencyThreshold: Int, mutualInformationThreshold: Int) {
 
   //TODO implement feature selection parameters
-  //TODO handle zeros appearing in "sparse" vector in vector calculations
-  //SparseVector[Double]([size])(index -> value, index -> value)
-
-  //build a lexicon for all vocabulary
-  val lex = new Lexicon[String]
-  this.extractVocabulary.map(lex.add)
-  lex.keySet  //see all words
-
-  /*//build a counter for each text
-  val counter = new Counter[String]
-  trainingData.head.getWords.map(_.toLowerCase).map(counter.incrementCount(_))
-  counter.keySet
-
-  //build feature vector for each text
-  for (word <- lex.keySet.toVector) yield {
-    counter.getCount(word)
-  }*/
-
-  //build a feature vector for each text all in one
-  val vectors = for (text <- this.trainingData) yield {
-    val counter = new Counter[String]
-    text.getWords.map(_.toLowerCase).map(counter.incrementCount(_))
-
-    (
-      (text.title, text.gradeLevel),
-      for (word <- lex.keySet.toArray) yield {
-      counter.getCount(word)
-    }
-    )
-  }
-
-  //concatenate by class
-  for (individualClass <- this.possibleClasses) yield {
-    val sparseMatches = vectors.filter(tuple => tuple._1._2 == individualClass).map(each =>
-      SparseVector(each._2))
-    (
-      individualClass,
-      foldElementwiseSum(sparseMatches)
-    )
-  }
-
-
-
-
-
-
-
-
-
-
-
 
   //total # of documents
   def trainingDataSize = {
@@ -111,7 +60,7 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
 
       (                                                                           //build a tuple
         (text.title, text.gradeLevel),                                              //title and gradeLevel
-        for (word <- lex.keySet.toArray) yield {                                      //word and count
+        for (word <- this.extractVocabulary) yield {                                      //word and count
           counter.getCount(word)
         }
       )
@@ -137,10 +86,10 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
   def makeFeatureVectorsConcatenized = {
     (for (individualClass <- this.possibleClasses) yield {                                         //for each class
       val sparseMatches = this.makeFeatureVectors.filter(tuple => tuple._1._2 == individualClass).map(each =>       //find matching feature vectors
-        SparseVector(each._2))                                                                      //build each into sparse vector
+        SparseVector(each._2.toArray))                                                                  //build each into sparse vector
 
       individualClass ->                                                                              //class
-        foldElementwiseSum(sparseMatches)                                                             //elementwise summed feature vector
+        foldElementwiseSum(sparseMatches).toArray                                                     //elementwise summed feature vector
 
     }).toMap
   }
@@ -169,10 +118,10 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
     val docConcat = this.makeFeatureVectorsConcatenized
 
     for (individualClass <- possibleClasses) yield {
-      val smoothingDenominator = sum(docConcat(individualClass)) + vocabulary.size.toDouble     //size of concatenated class + size of entire vocabulary
+      val smoothingDenominator = sum(docConcat(individualClass)) + vocabulary.size.toDouble     //total word count of concatenized class + size of entire vocabulary
       (
         individualClass,
-        1d / smoothingDenominator,
+        log(1d / smoothingDenominator),
         for (word <- docConcat(individualClass)) yield {
           log((word + 1d) / smoothingDenominator.toDouble)
         }
@@ -187,7 +136,6 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
 
 
   // TODO figure out why NaN
-  // TODO fix ==> it's taking conditional probabilities from training, not test
   def vectorTest = {
     val priors = this.priorProbabilities
     val concatDocs = this.makeFeatureVectorsConcatenized
@@ -199,7 +147,7 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
 
       val vector =  (
                       (doc.title, doc.gradeLevel),                    //title and gradeLevel
-                      for (word <- extractVocabulary.toArray) yield {
+                      for (word <- this.extractVocabulary) yield {
                         counter.getCount(word)                          //word and count
                       }
                     )
@@ -207,12 +155,10 @@ class NaiveBayes(val trainingData: Vector[TextDocument], val testDocument: Vecto
       for (individualClass <- this.possibleClasses) yield {
         val conditionalProbs = this.vectorConditionalProbabilities.find(_._1 == individualClass)
 
-        val conditionalProbsCalc = for (word <- vector._2) yield {
-          if (word == 0.0) {
-            log(conditionalProbs.get._2.toDouble)
-          } else {
-            log(conditionalProbs.get._3(vector._2.indexOf(word))) * word
-          }
+        val conditionalProbsCalc = for (i <- 0 to vector._2.length - 1) yield {
+          if (vector._2(i) != 0.0) {
+            conditionalProbs.get._3(i) * vector._2(i)
+          } else { 0 }
         }
 
         (
