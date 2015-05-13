@@ -9,6 +9,7 @@ import edu.stanford.nlp.ling.Datum
 import scala.collection.mutable.Buffer
 import scala.collection.parallel.mutable
 import scala.io.Source
+import TextComplexity.Scaling._
 
 /**
  * Created by mcapizzi on 4/15/15.
@@ -24,7 +25,8 @@ class MachineLearning(
                        val textToTestFilePath: String = ""
                        ) {
 
-  //val scores = Source.fromFile("/home/mcapizzi/Github/Unbound/src/main/resources/lexile").getLines.toList.map(_.split(",")).map(_.map(_.trim)).map(each => (each.head, each(1), each(2))).toVector
+
+  //TODO add results for normalized features
 
   val rawFile = new File(rawTextFileFolder)
   val annotatedFile = new File(annotatedTextFileFolder)
@@ -359,7 +361,7 @@ class MachineLearning(
   }
 
   //TODO rewrite NaiveBayes to be more efficient
-  def leaveOneOut(withEnsemble: Boolean = false): Vector[(String, Vector[(String, String, String)])] = {
+  def leaveOneOut(withEnsemble: Boolean = false, normalized: Boolean = true): Vector[(String, Vector[(String, String, String)])] = {
     val folderName = this.featuresToInclude.mkString("_")
     val outsideFolder = new File("/home/mcapizzi/Github/Unbound/src/main/resources/featureVectors/" + numberOfClasses.toString + "/" + folderName) //select proper outside folder based on parameters
 
@@ -408,6 +410,11 @@ class MachineLearning(
             val trainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(train.getCanonicalPath) //build training dataset
             val testDataSet = RVFDataset.mkDatumsFromSvmLightFormat(test.getCanonicalPath) //build test dataset
 
+            //normalize data
+            val range = Datasets.svmScaleRVFDataset(trainDataSet, 0, 1)
+            val newTestDatum = new RVFDatum(testDataSet.head.label, normalizeDatum(testDataSet.head, range))
+            //////////////////////////////
+
             classifier.train(trainDataSet)
 
             val titleRegex = """.+#(.*)""".r
@@ -416,7 +423,9 @@ class MachineLearning(
 
             (
               title, //title
-              revertLabel(classifier.classOf(testDataSet.head)), //mlScore
+              if (normalized) revertLabel(classifier.classOf(newTestDatum)) else revertLabel(classifier.classOf(testDataSet.head)),      // mlScore -- normalized / not normalized
+              //revertLabel(classifier.classOf(newTestDatum))       //mlScore normalized
+              //revertLabel(classifier.classOf(testDataSet.head)),  //mlScore not normalized
               revertLabel(testDataSet.head.label) //actualScore
               )
           }).toVector
@@ -727,7 +736,7 @@ class MachineLearning(
     //follow scoring
     //keep files one time to confirm
       //only run firstLeaveOneOut with randomForest
-  def secondLeaveOneOut(scoreList: Vector[(String, Vector[(String, String, String)])] /*, withEnsemble: Boolean = false*/): Vector[(String, Vector[(String, String, String)])] = {
+  def secondLeaveOneOut(scoreList: Vector[(String, Vector[(String, String, String)])], normalize: Boolean = true /*, withEnsemble: Boolean = false*/): Vector[(String, Vector[(String, String, String)])] = {
 
     for (model <- modelsToUse) yield {
       /*
@@ -787,6 +796,11 @@ class MachineLearning(
 
             val elemTrainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(elemTrainFile.getCanonicalPath)
 
+            //normalize data
+            val range = Datasets.svmScaleRVFDataset(elemTrainDataSet, 0, 1)
+            val newTestDatum = new RVFDatum(testDataSet.head.label, normalizeDatum(testDataSet.head, range))
+            //////////////////////////////
+
             //train elementary classifier
             classifier.train(elemTrainDataSet)
 
@@ -797,7 +811,9 @@ class MachineLearning(
             //build tuple
             (
               text._1, //title
-              revertLabel(classifier.classOf(testDataSet.head)), //mlScore
+              if (normalize) revertLabel(classifier.classOf(newTestDatum)) else revertLabel(classifier.classOf(testDataSet.head)), // mlScore -- normalized / not normalized
+              //revertLabel(classifier.classOf(newTestDatum))       //mlScore normalized
+              //revertLabel(classifier.classOf(testDataSet.head)),  //mlScore not normalized
               revertLabel(testDataSet.head.label) //actualScore
               )
 
@@ -834,6 +850,11 @@ class MachineLearning(
 
             val middleTrainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(middleTrainFile.getCanonicalPath)
 
+            //normalize data
+            val range = Datasets.svmScaleRVFDataset(middleTrainDataSet, 0, 1)
+            val newTestDatum = new RVFDatum(testDataSet.head.label, normalizeDatum(testDataSet.head, range))
+            //////////////////////////////
+
             //train middle classifier
             classifier.train(middleTrainDataSet)
 
@@ -844,7 +865,9 @@ class MachineLearning(
             //build tuple
             (
               text._1, //title
-              revertLabel(classifier.classOf(testDataSet.head)), //mlScore
+              if (normalize) revertLabel(classifier.classOf(newTestDatum)) else revertLabel(classifier.classOf(testDataSet.head)), // mlScore -- normalized / not normalized
+              //revertLabel(classifier.classOf(newTestDatum))       //mlScore normalized
+              //revertLabel(classifier.classOf(testDataSet.head)),  //mlScore not normalized
               revertLabel(testDataSet.head.label) //actualScore
               )
 
@@ -881,7 +904,12 @@ class MachineLearning(
 
             val highSchoolTrainDataSet = RVFDataset.mkDatasetFromSvmLightFormat(highSchoolTrainFile.getCanonicalPath)
 
-            //train highSchool classifier
+            //normalize data
+            val range = Datasets.svmScaleRVFDataset(highSchoolTrainDataSet, 0, 1)
+            val newTestDatum = new RVFDatum(testDataSet.head.label, normalizeDatum(testDataSet.head, range))
+            //////////////////////////////
+
+            //train elementary classifier
             classifier.train(highSchoolTrainDataSet)
 
             //delete files
@@ -891,7 +919,9 @@ class MachineLearning(
             //build tuple
             (
               text._1, //title
-              revertLabel(classifier.classOf(testDataSet.head)), //mlScore
+              if (normalize) revertLabel(classifier.classOf(newTestDatum)) else revertLabel(classifier.classOf(testDataSet.head)), // mlScore -- normalized / not normalized
+              //revertLabel(classifier.classOf(newTestDatum))       //mlScore normalized
+              //revertLabel(classifier.classOf(testDataSet.head)),  //mlScore not normalized
               revertLabel(testDataSet.head.label) //actualScore
               )
           }

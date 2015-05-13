@@ -68,7 +68,7 @@ object Visualization {
   //legend(List("blah", "blah"))
 
   //accuracy pie chart
-  //pie(accuracy, 1 - accuracy)
+  //pie(List(accuracy, 1 - accuracy))
 
   //histogram
   //histogram(distances, distances.distinct.length-1)

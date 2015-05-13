@@ -8,6 +8,8 @@ import edu.arizona.sista.processors.corenlp.CoreNLPProcessor
 object MainTextComplexity {
   def main(args: Array[String]) = {
 
+    //TODO build main to run through all feature sets and all classifiers
+
     val p = new CoreNLPProcessor(withDiscourse = true)
     val ml6 = new MachineLearning("/home/mcapizzi/Github/Unbound/src/main/resources/annotatedText/", p, Vector("lexical"), Vector("randomForest"), 6, "/home/mcapizzi/Github/Unbound/src/main/resources/rawText/")
     val ml3 = new MachineLearning("/home/mcapizzi/Github/Unbound/src/main/resources/annotatedText/", p, Vector("paragraph"), Vector("randomForest"), 3, "/home/mcapizzi/Github/Unbound/src/main/resources/rawText/")
