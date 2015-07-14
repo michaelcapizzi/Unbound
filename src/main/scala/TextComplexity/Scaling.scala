@@ -25,6 +25,7 @@ object Scaling {
 
   //apply to every datum in dataset
   def normalizeData(dataSet: RVFDataset[Int, String]): IndexedSeq[Counter[String]] = {
+    //TODO check to see if this range should be 0 to 1 like all the rest!
     val normalizedScaleRange = Datasets.svmScaleRVFDataset(dataSet, -1, 1)
     for (i <- 0 to dataSet.size - 1) yield {
       Datasets.svmScaleDatum(dataSet.mkDatum(i).featuresCounter, normalizedScaleRange, 0, 1)
